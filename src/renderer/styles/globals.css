@@ -1,0 +1,185 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-500;
+}
+
+/* FullCalendar custom styles */
+.fc {
+  @apply font-sans;
+}
+
+.fc .fc-toolbar-title {
+  @apply text-xl font-semibold text-gray-800 dark:text-gray-100;
+}
+
+.fc .fc-button-primary {
+  @apply bg-primary-500 border-primary-500 hover:bg-primary-600 hover:border-primary-600;
+}
+
+.fc .fc-button-primary:disabled {
+  @apply bg-primary-300 border-primary-300;
+}
+
+.fc .fc-daygrid-day-number,
+.fc .fc-col-header-cell-cushion {
+  @apply text-gray-700 dark:text-gray-300;
+}
+
+.fc .fc-timegrid-slot-label-cushion {
+  @apply text-gray-600 dark:text-gray-400 text-xs;
+}
+
+.fc .fc-timegrid-axis-cushion {
+  @apply text-gray-500 dark:text-gray-400;
+}
+
+.fc .fc-scrollgrid {
+  @apply border-gray-200 dark:border-gray-700;
+}
+
+.fc .fc-timegrid-divider {
+  @apply bg-gray-200 dark:bg-gray-700;
+}
+
+.fc td,
+.fc th {
+  @apply border-gray-200 dark:border-gray-700;
+}
+
+.fc .fc-daygrid-day.fc-day-today,
+.fc .fc-timegrid-col.fc-day-today {
+  @apply bg-primary-50 dark:bg-primary-900/20;
+}
+
+/* Calendar event styles */
+.fc-event {
+  @apply cursor-pointer border-0 rounded-md overflow-hidden;
+}
+
+.fc-event.google-event {
+  @apply bg-blue-500 dark:bg-blue-600;
+}
+
+.fc-event.scheduled-task {
+  @apply border-2 border-dashed;
+}
+
+.fc-event.urgency-1 {
+  @apply bg-urgency-critical/80 border-urgency-critical;
+}
+
+.fc-event.urgency-2 {
+  @apply bg-urgency-urgent/80 border-urgency-urgent;
+}
+
+.fc-event.urgency-3 {
+  @apply bg-urgency-deadline/80 border-urgency-deadline;
+}
+
+.fc-event.urgency-4 {
+  @apply bg-urgency-good/80 border-urgency-good;
+}
+
+.fc-event.urgency-5 {
+  @apply bg-urgency-mastered/80 border-urgency-mastered;
+}
+
+/* Toast customizations */
+.toast-container {
+  @apply font-sans;
+}
+
+/* Drag and drop styles */
+.dragging {
+  @apply opacity-50;
+}
+
+.drop-target {
+  @apply ring-2 ring-primary-500 ring-offset-2;
+}
+
+/* Animation classes */
+.animate-in {
+  animation: animateIn 0.2s ease-out;
+}
+
+@keyframes animateIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Confetti animation */
+.confetti-piece {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  animation: confettiFall 3s ease-out forwards;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Streak fire animation */
+.streak-fire {
+  animation: firePulse 1s ease-in-out infinite;
+}
+
+@keyframes firePulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.1);
+    filter: brightness(1.2);
+  }
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-40;
+}
+
+/* Focus styles */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  @apply outline-none ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-gray-900;
+}
+
+/* Sidebar transition */
+.sidebar-transition {
+  @apply transition-all duration-300 ease-in-out;
+}
