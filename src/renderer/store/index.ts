@@ -10,9 +10,24 @@ import type {
   CreateTaskDTO,
   UpdateTaskDTO,
   TimeSlot,
-  SyncStatus,
 } from '../types';
-import { DEFAULT_SETTINGS } from '@shared/constants';
+
+// Default settings (duplicated here to avoid cross-directory import issues with Vite)
+const DEFAULT_SETTINGS: Settings = {
+  workingHoursStart: 8,
+  workingHoursEnd: 22,
+  bufferMinutes: 10,
+  theme: 'system',
+  urgencyLevels: [
+    { level: 1, name: 'Critical', daysInterval: 1, color: '#ef4444' },
+    { level: 2, name: 'Urgent', daysInterval: 3, color: '#f97316' },
+    { level: 3, name: 'Deadline', daysInterval: 7, color: '#eab308' },
+    { level: 4, name: 'Good', daysInterval: 7, color: '#22c55e' },
+    { level: 5, name: 'Mastered', daysInterval: 21, color: '#06b6d4' },
+  ],
+  notificationsEnabled: true,
+  autoSyncInterval: 15,
+};
 
 interface AppState {
   // Data
