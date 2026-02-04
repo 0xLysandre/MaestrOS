@@ -12,7 +12,7 @@ import type {
   TimeSlot,
 } from '../types';
 
-// Default settings (duplicated here to avoid cross-directory import issues with Vite)
+// Default settings
 const DEFAULT_SETTINGS: Settings = {
   workingHoursStart: 8,
   workingHoursEnd: 22,
@@ -29,6 +29,11 @@ const DEFAULT_SETTINGS: Settings = {
   autoSyncInterval: 15,
 };
 
+// Check if running inside Electron
+const isElectron = typeof window !== 'undefined' &&
+  typeof window.electronAPI !== 'undefined' &&
+  window.electronAPI !== null;
+
 interface AppState {
   // Data
   tasks: Task[];
@@ -42,6 +47,7 @@ interface AppState {
   isLoading: boolean;
   isSyncing: boolean;
   isGoogleConnected: boolean;
+  isElectronMode: boolean;
   theme: 'light' | 'dark' | 'system';
 
   // Actions
@@ -100,12 +106,19 @@ export const useStore = create<AppState>((set, get) => ({
   isLoading: true,
   isSyncing: false,
   isGoogleConnected: false,
+  isElectronMode: isElectron,
   theme: 'system',
 
   // Initialize app
   initializeApp: async () => {
     try {
       set({ isLoading: true });
+
+      if (!isElectron) {
+        console.warn('Running in browser mode - Electron API not available');
+        set({ isLoading: false });
+        return;
+      }
 
       // Fetch all initial data in parallel
       await Promise.all([
@@ -123,12 +136,12 @@ export const useStore = create<AppState>((set, get) => ({
     } catch (error) {
       console.error('Failed to initialize app:', error);
       set({ isLoading: false });
-      toast.error('Failed to initialize app');
     }
   },
 
   // Tasks
   fetchTasks: async () => {
+    if (!isElectron) return;
     try {
       const response = await window.electronAPI.tasks.getAll();
       if (response.success && response.data) {
@@ -140,6 +153,10 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   createTask: async (dto) => {
+    if (!isElectron) {
+      toast.error('Not available in browser mode');
+      return null;
+    }
     try {
       const response = await window.electronAPI.tasks.create(dto);
       if (response.success && response.data) {
@@ -157,6 +174,10 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   updateTask: async (dto) => {
+    if (!isElectron) {
+      toast.error('Not available in browser mode');
+      return null;
+    }
     try {
       const response = await window.electronAPI.tasks.update(dto);
       if (response.success && response.data) {
@@ -174,6 +195,10 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   deleteTask: async (id) => {
+    if (!isElectron) {
+      toast.error('Not available in browser mode');
+      return false;
+    }
     try {
       const response = await window.electronAPI.tasks.delete(id);
       if (response.success) {
@@ -191,6 +216,10 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   completeTask: async (id, newMasteryLevel) => {
+    if (!isElectron) {
+      toast.error('Not available in browser mode');
+      return null;
+    }
     try {
       const response = await window.electronAPI.tasks.complete(id, newMasteryLevel);
       if (response.success && response.data) {
@@ -209,6 +238,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   // Scheduled Tasks
   fetchScheduledTasks: async (startDate, endDate) => {
+    if (!isElectron) return;
     try {
       const response = await window.electronAPI.scheduled.getAll(startDate, endDate);
       if (response.success && response.data) {
@@ -220,6 +250,10 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   scheduleTask: async (taskId, start, end) => {
+    if (!isElectron) {
+      toast.error('Not available in browser mode');
+      return null;
+    }
     try {
       const response = await window.electronAPI.schedule.placeTask({
         taskId,
@@ -244,6 +278,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   updateScheduledTask: async (id, start, end) => {
+    if (!isElectron) return null;
     try {
       const response = await window.electronAPI.scheduled.update(id, {
         scheduledStart: start,
@@ -267,6 +302,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   deleteScheduledTask: async (id) => {
+    if (!isElectron) return false;
     try {
       const response = await window.electronAPI.scheduled.delete(id);
       if (response.success) {
@@ -283,6 +319,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   completeScheduledTask: async (id) => {
+    if (!isElectron) return null;
     try {
       const response = await window.electronAPI.scheduled.complete(id);
       if (response.success && response.data) {
@@ -302,6 +339,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   // Calendar
   fetchCalendarEvents: async (startDate, endDate) => {
+    if (!isElectron) return;
     try {
       const response = await window.electronAPI.calendar.getEvents(startDate, endDate);
       if (response.success && response.data) {
@@ -313,6 +351,10 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   syncCalendar: async () => {
+    if (!isElectron) {
+      toast.error('Not available in browser mode');
+      return;
+    }
     const { isGoogleConnected } = get();
     if (!isGoogleConnected) {
       toast.error('Please connect Google Calendar first');
@@ -338,6 +380,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   // Scheduling
   findAvailableSlots: async (duration, startDate, endDate) => {
+    if (!isElectron) return [];
     try {
       const response = await window.electronAPI.schedule.findSlots({
         taskDuration: duration,
@@ -356,6 +399,10 @@ export const useStore = create<AppState>((set, get) => ({
 
   // Google Auth
   connectGoogle: async () => {
+    if (!isElectron) {
+      toast.error('Google Calendar connection requires the desktop app');
+      return;
+    }
     try {
       const response = await window.electronAPI.google.authenticate();
       if (response.success) {
@@ -372,6 +419,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   disconnectGoogle: async () => {
+    if (!isElectron) return;
     try {
       const response = await window.electronAPI.google.disconnect();
       if (response.success) {
@@ -387,6 +435,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   checkGoogleAuth: async () => {
+    if (!isElectron) return;
     try {
       const response = await window.electronAPI.google.checkAuth();
       if (response.success) {
@@ -399,6 +448,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   // Settings
   fetchSettings: async () => {
+    if (!isElectron) return;
     try {
       const response = await window.electronAPI.settings.get();
       if (response.success && response.data) {
@@ -410,6 +460,11 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   updateSettings: async (newSettings) => {
+    if (!isElectron) {
+      // In browser mode, just update local state
+      set((state) => ({ settings: { ...state.settings, ...newSettings } }));
+      return;
+    }
     try {
       const response = await window.electronAPI.settings.set(newSettings);
       if (response.success && response.data) {
@@ -429,6 +484,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   // Stats & Achievements
   fetchStats: async () => {
+    if (!isElectron) return;
     try {
       const response = await window.electronAPI.stats.get();
       if (response.success && response.data) {
@@ -440,6 +496,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   fetchAchievements: async () => {
+    if (!isElectron) return;
     try {
       const response = await window.electronAPI.achievements.get();
       if (response.success && response.data) {
@@ -459,9 +516,11 @@ export const useStore = create<AppState>((set, get) => ({
 
 // Set up IPC listeners for real-time updates
 function setupIpcListeners(
-  set: (state: Partial<AppState>) => void,
+  set: (state: Partial<AppState> | ((state: AppState) => Partial<AppState>)) => void,
   get: () => AppState
 ) {
+  if (!isElectron) return;
+
   // Tasks updated
   window.electronAPI.tasks.onUpdated((tasks) => {
     set({ tasks });
