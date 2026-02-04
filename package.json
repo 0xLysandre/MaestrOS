@@ -4,9 +4,10 @@
   "description": "A smart task scheduler for medical students with spaced repetition and Google Calendar integration",
   "main": "dist/main/main.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
+    "dev": "npm run build:main && concurrently -k \"npm run dev:main\" \"npm run dev:renderer\" \"npm run electron:dev\"",
     "dev:main": "tsc -p tsconfig.main.json --watch",
     "dev:renderer": "vite",
+    "dev:browser": "vite",
     "build": "npm run build:main && npm run build:renderer",
     "build:main": "tsc -p tsconfig.main.json",
     "build:renderer": "vite build",
