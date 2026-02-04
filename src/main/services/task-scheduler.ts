@@ -1,9 +1,6 @@
 import type {
   TimeSlot,
-  CalendarEvent,
   Task,
-  ScheduledTask,
-  Settings,
 } from '../../shared/types';
 import { calendarEventQueries, scheduledTaskQueries } from '../database/queries';
 import { DEFAULT_SETTINGS } from '../../shared/constants';
@@ -261,16 +258,19 @@ export function hasConflict(
     end.toISOString()
   );
 
-  const allItems = [...events, ...scheduledTasks.map((t) => ({
-    startTime: t.scheduledStart,
-    endTime: t.scheduledEnd,
-  }))];
+  // Check calendar events
+  for (const event of events) {
+    const itemStart = new Date(event.startTime);
+    const itemEnd = new Date(event.endTime);
+    if (start < itemEnd && end > itemStart) {
+      return true;
+    }
+  }
 
-  for (const item of allItems) {
-    const itemStart = new Date('startTime' in item ? item.startTime : item.scheduledStart);
-    const itemEnd = new Date('endTime' in item ? item.endTime : item.scheduledEnd);
-
-    // Check for overlap
+  // Check scheduled tasks
+  for (const task of scheduledTasks) {
+    const itemStart = new Date(task.scheduledStart);
+    const itemEnd = new Date(task.scheduledEnd);
     if (start < itemEnd && end > itemStart) {
       return true;
     }
