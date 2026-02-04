@@ -15,7 +15,7 @@ export type {
   ScheduleTaskRequest,
   SyncStatus,
   IPCResponse,
-} from '../../shared/types';
+} from '@shared/types';
 
 // View types
 export type ViewType = 'calendar' | 'tasks' | 'profile' | 'settings';

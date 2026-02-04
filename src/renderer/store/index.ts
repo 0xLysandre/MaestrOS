@@ -12,7 +12,7 @@ import type {
   TimeSlot,
   SyncStatus,
 } from '../types';
-import { DEFAULT_SETTINGS } from '../../shared/constants';
+import { DEFAULT_SETTINGS } from '@shared/constants';
 
 interface AppState {
   // Data
