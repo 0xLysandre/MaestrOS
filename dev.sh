@@ -83,12 +83,13 @@ fi
 
 set +e
 if [ -n "$ELECTRON_VER" ]; then
-    echo "  Running: npx @electron/rebuild -f -w better-sqlite3 -v $ELECTRON_VER"
-    npx @electron/rebuild -f -w better-sqlite3 -v "$ELECTRON_VER" 2>&1
+    # Use the correct binary name 'electron-rebuild' (not the package name '@electron/rebuild')
+    echo "  Running: npx electron-rebuild -f -w better-sqlite3 -v $ELECTRON_VER"
+    npx electron-rebuild -f -w better-sqlite3 -v "$ELECTRON_VER" 2>&1
     REBUILD_EXIT=$?
 else
-    echo "  Running: npx @electron/rebuild -f -w better-sqlite3"
-    npx @electron/rebuild -f -w better-sqlite3 2>&1
+    echo "  Running: npx electron-rebuild -f -w better-sqlite3"
+    npx electron-rebuild -f -w better-sqlite3 2>&1
     REBUILD_EXIT=$?
 fi
 set -e
@@ -96,13 +97,24 @@ set -e
 if [ $REBUILD_EXIT -eq 0 ]; then
     echo "  electron-rebuild succeeded"
 else
-    echo "  electron-rebuild failed (exit $REBUILD_EXIT), trying npm rebuild..."
-    set +e
-    npm rebuild better-sqlite3 --build-from-source 2>&1
-    NPM_REBUILD_EXIT=$?
-    set -e
+    echo "  electron-rebuild failed (exit $REBUILD_EXIT), trying npm rebuild with Electron headers..."
+    if [ -n "$ELECTRON_VER" ]; then
+        # Rebuild against Electron's Node headers (not system Node)
+        set +e
+        npm_config_runtime=electron \
+        npm_config_target="$ELECTRON_VER" \
+        npm_config_disturl=https://electronjs.org/headers \
+        npm rebuild better-sqlite3 --build-from-source 2>&1
+        NPM_REBUILD_EXIT=$?
+        set -e
+    else
+        set +e
+        npm rebuild better-sqlite3 --build-from-source 2>&1
+        NPM_REBUILD_EXIT=$?
+        set -e
+    fi
     if [ $NPM_REBUILD_EXIT -eq 0 ]; then
-        echo "  npm rebuild succeeded"
+        echo "  npm rebuild with Electron headers succeeded"
     else
         echo "  WARNING: native module rebuild failed (exit $NPM_REBUILD_EXIT)"
         echo "  The app may not work correctly with SQLite."
