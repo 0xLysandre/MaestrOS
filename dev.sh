@@ -5,9 +5,36 @@
 
 set -e
 
+# Cleanup background processes on exit
+cleanup() {
+    if [ -n "$VITE_PID" ]; then
+        kill "$VITE_PID" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT INT TERM
+
 echo "==================================="
 echo "  Medical Scheduler - Dev Mode"
 echo "==================================="
+
+# Detect NixOS and check for Electron
+if [ -f /etc/NIXOS ]; then
+    if [ -z "$ELECTRON_OVERRIDE_DIST_PATH" ]; then
+        echo ""
+        echo "NixOS detected. You need to run this inside a nix-shell:"
+        echo ""
+        echo "  nix-shell --run ./dev.sh"
+        echo ""
+        echo "Or enter the shell first:"
+        echo ""
+        echo "  nix-shell"
+        echo "  ./dev.sh"
+        echo ""
+        exit 1
+    fi
+    echo ""
+    echo "NixOS detected - using Nix-provided Electron"
+fi
 
 # Check if node_modules exists
 if [ ! -d "node_modules" ]; then
@@ -33,22 +60,32 @@ npm run build:main
 echo ""
 echo "[4/4] Starting application..."
 echo ""
-echo "Starting Vite dev server and Electron..."
 echo "Press Ctrl+C to stop"
 echo ""
 
-# Run Vite in background, then start Electron when ready
+# Run Vite in background
 npm run dev:renderer &
 VITE_PID=$!
 
 # Wait for Vite to be ready
-echo "Waiting for Vite server to start..."
-while ! curl -s http://localhost:5173 > /dev/null 2>&1; do
+echo "Waiting for Vite server..."
+for i in $(seq 1 30); do
+    if curl -s http://localhost:5173 > /dev/null 2>&1; then
+        break
+    fi
     sleep 1
 done
 
-echo "Vite server ready, starting Electron..."
-npm run start
+if ! curl -s http://localhost:5173 > /dev/null 2>&1; then
+    echo "ERROR: Vite server failed to start after 30s"
+    exit 1
+fi
 
-# Cleanup on exit
-trap "kill $VITE_PID 2>/dev/null" EXIT
+echo "Vite ready. Launching Electron..."
+
+# Use Nix electron if available, otherwise use npm
+if [ -n "$ELECTRON_OVERRIDE_DIST_PATH" ]; then
+    electron .
+else
+    npx electron .
+fi
