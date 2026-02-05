@@ -36,29 +36,42 @@ if [ -f /etc/NIXOS ]; then
     echo "NixOS detected - using Nix-provided Electron"
 fi
 
+# Kill any leftover Vite process on port 5173
+if lsof -ti:5173 > /dev/null 2>&1; then
+    echo ""
+    echo "Killing existing process on port 5173..."
+    kill $(lsof -ti:5173) 2>/dev/null || true
+    sleep 1
+fi
+
 # Check if node_modules exists
 if [ ! -d "node_modules" ]; then
     echo ""
-    echo "[1/4] Installing dependencies..."
+    echo "[1/5] Installing dependencies..."
     npm install
 else
     echo ""
-    echo "[1/4] Dependencies already installed"
+    echo "[1/5] Dependencies already installed"
 fi
+
+# Rebuild native modules for Electron
+echo ""
+echo "[2/5] Rebuilding native modules for Electron..."
+npx electron-rebuild 2>/dev/null || npm rebuild better-sqlite3 --build-from-source 2>/dev/null || true
 
 # Clear Vite cache
 echo ""
-echo "[2/4] Clearing Vite cache..."
+echo "[3/5] Clearing Vite cache..."
 rm -rf node_modules/.vite 2>/dev/null || true
 
 # Build main process
 echo ""
-echo "[3/4] Building Electron main process..."
+echo "[4/5] Building Electron main process..."
 npm run build:main
 
 # Start both Vite and Electron
 echo ""
-echo "[4/4] Starting application..."
+echo "[5/5] Starting application..."
 echo ""
 echo "Press Ctrl+C to stop"
 echo ""
