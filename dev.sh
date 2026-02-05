@@ -30,12 +30,19 @@ if [ -f /etc/NIXOS ]; then
     echo "NixOS detected - using Nix-provided Electron"
 fi
 
-# Kill any leftover Vite process on port 5173
-if lsof -ti:5173 > /dev/null 2>&1; then
-    echo ""
-    echo "Killing existing process on port 5173..."
-    kill $(lsof -ti:5173) 2>/dev/null || true
-    sleep 1
+# Kill any leftover process on port 5173
+echo ""
+echo "Checking for leftover processes on port 5173..."
+if command -v lsof &>/dev/null; then
+    PIDS=$(lsof -ti:5173 2>/dev/null || true)
+    if [ -n "$PIDS" ]; then
+        echo "Killing PIDs: $PIDS"
+        echo "$PIDS" | xargs kill 2>/dev/null || true
+        sleep 2
+    fi
+elif command -v fuser &>/dev/null; then
+    fuser -k 5173/tcp 2>/dev/null || true
+    sleep 2
 fi
 
 # Check if node_modules exists
@@ -51,7 +58,26 @@ fi
 # Rebuild native modules for Electron
 echo ""
 echo "[2/5] Rebuilding native modules for Electron..."
-npx electron-rebuild 2>/dev/null || npm rebuild better-sqlite3 --build-from-source 2>/dev/null || true
+echo "  (better-sqlite3 must match Electron's Node version)"
+set +e
+npx electron-rebuild -f -w better-sqlite3 2>&1
+REBUILD_EXIT=$?
+set -e
+if [ $REBUILD_EXIT -eq 0 ]; then
+    echo "  electron-rebuild succeeded"
+else
+    echo "  electron-rebuild returned $REBUILD_EXIT, trying npm rebuild..."
+    set +e
+    npm rebuild better-sqlite3 --build-from-source 2>&1
+    NPM_REBUILD_EXIT=$?
+    set -e
+    if [ $NPM_REBUILD_EXIT -eq 0 ]; then
+        echo "  npm rebuild succeeded"
+    else
+        echo "  WARNING: native module rebuild failed (exit $NPM_REBUILD_EXIT)"
+        echo "  The app may not work correctly with SQLite."
+    fi
+fi
 
 # Clear Vite cache
 echo ""
