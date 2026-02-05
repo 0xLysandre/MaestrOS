@@ -5,6 +5,8 @@
 
 set -e
 
+NIXPKGS_URL="https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz"
+
 # Cleanup background processes on exit
 cleanup() {
     if [ -n "$VITE_PID" ]; then
@@ -17,20 +19,12 @@ echo "==================================="
 echo "  Medical Scheduler - Dev Mode"
 echo "==================================="
 
-# Detect NixOS and check for Electron
+# Detect NixOS and auto-enter nix-shell if needed
 if [ -f /etc/NIXOS ]; then
     if [ -z "$ELECTRON_OVERRIDE_DIST_PATH" ]; then
         echo ""
-        echo "NixOS detected. You need to run this inside nix-shell:"
-        echo ""
-        echo "  nix-shell --run ./dev.sh"
-        echo ""
-        echo "Or enter the shell first:"
-        echo ""
-        echo "  nix-shell"
-        echo "  ./dev.sh"
-        echo ""
-        exit 1
+        echo "NixOS detected - entering nix-shell automatically..."
+        exec nix-shell -I "nixpkgs=$NIXPKGS_URL" --run "$0"
     fi
     echo ""
     echo "NixOS detected - using Nix-provided Electron"
