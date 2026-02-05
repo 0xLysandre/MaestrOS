@@ -73,12 +73,12 @@ fi
 
 set +e
 if [ -n "$ELECTRON_VER" ]; then
-    echo "  Running: npx electron-rebuild -f -w better-sqlite3 -v $ELECTRON_VER"
-    npx electron-rebuild -f -w better-sqlite3 -v "$ELECTRON_VER" 2>&1
+    echo "  Running: npx @electron/rebuild -f -w better-sqlite3 -v $ELECTRON_VER"
+    npx @electron/rebuild -f -w better-sqlite3 -v "$ELECTRON_VER" 2>&1
     REBUILD_EXIT=$?
 else
-    echo "  Running: npx electron-rebuild -f -w better-sqlite3"
-    npx electron-rebuild -f -w better-sqlite3 2>&1
+    echo "  Running: npx @electron/rebuild -f -w better-sqlite3"
+    npx @electron/rebuild -f -w better-sqlite3 2>&1
     REBUILD_EXIT=$?
 fi
 set -e

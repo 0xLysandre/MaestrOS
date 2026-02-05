@@ -4,7 +4,7 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     nodejs_20
     electron
-    python3
+    (python3.withPackages (ps: [ ps.setuptools ]))
     pkg-config
     gcc
     gnumake
