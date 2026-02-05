@@ -6,6 +6,8 @@ pkgs.mkShell {
     electron
     python3
     pkg-config
+    gcc
+    gnumake
     pixman
     cairo
     pango

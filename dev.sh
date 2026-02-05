@@ -59,14 +59,34 @@ fi
 echo ""
 echo "[2/5] Rebuilding native modules for Electron..."
 echo "  (better-sqlite3 must match Electron's Node version)"
+
+# Detect the actual Electron version we'll be running
+ELECTRON_VER=""
+if [ -n "$ELECTRON_OVERRIDE_DIST_PATH" ] && command -v electron &>/dev/null; then
+    ELECTRON_VER=$(electron --version 2>/dev/null | sed 's/^v//' || true)
+    echo "  Nix-provided Electron version: $ELECTRON_VER"
+fi
+if [ -z "$ELECTRON_VER" ] && [ -f node_modules/electron/package.json ]; then
+    ELECTRON_VER=$(node -p "require('./node_modules/electron/package.json').version" 2>/dev/null || true)
+    echo "  npm Electron version: $ELECTRON_VER"
+fi
+
 set +e
-npx electron-rebuild -f -w better-sqlite3 2>&1
-REBUILD_EXIT=$?
+if [ -n "$ELECTRON_VER" ]; then
+    echo "  Running: npx electron-rebuild -f -w better-sqlite3 -v $ELECTRON_VER"
+    npx electron-rebuild -f -w better-sqlite3 -v "$ELECTRON_VER" 2>&1
+    REBUILD_EXIT=$?
+else
+    echo "  Running: npx electron-rebuild -f -w better-sqlite3"
+    npx electron-rebuild -f -w better-sqlite3 2>&1
+    REBUILD_EXIT=$?
+fi
 set -e
+
 if [ $REBUILD_EXIT -eq 0 ]; then
     echo "  electron-rebuild succeeded"
 else
-    echo "  electron-rebuild returned $REBUILD_EXIT, trying npm rebuild..."
+    echo "  electron-rebuild failed (exit $REBUILD_EXIT), trying npm rebuild..."
     set +e
     npm rebuild better-sqlite3 --build-from-source 2>&1
     NPM_REBUILD_EXIT=$?
