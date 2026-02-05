@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Medical Scheduler - Development Script
 # This script starts the app in development mode
