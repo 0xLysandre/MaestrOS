@@ -21,13 +21,13 @@ echo "==================================="
 if [ -f /etc/NIXOS ]; then
     if [ -z "$ELECTRON_OVERRIDE_DIST_PATH" ]; then
         echo ""
-        echo "NixOS detected. You need to run this inside a nix-shell:"
+        echo "NixOS detected. You need to run this inside nix develop:"
         echo ""
-        echo "  nix-shell --run ./dev.sh"
+        echo "  nix develop --command ./dev.sh"
         echo ""
         echo "Or enter the shell first:"
         echo ""
-        echo "  nix-shell"
+        echo "  nix develop"
         echo "  ./dev.sh"
         echo ""
         exit 1
