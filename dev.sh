@@ -60,6 +60,16 @@ echo ""
 echo "[2/5] Rebuilding native modules for Electron..."
 echo "  (better-sqlite3 must match Electron's Node version)"
 
+# Clean stale build artifacts to prevent version mismatch issues
+if [ -d "node_modules/better-sqlite3/build" ]; then
+    echo "  Cleaning stale better-sqlite3 build artifacts..."
+    rm -rf node_modules/better-sqlite3/build
+fi
+if [ -d "node_modules/better-sqlite3/prebuilds" ]; then
+    echo "  Cleaning old prebuilds..."
+    rm -rf node_modules/better-sqlite3/prebuilds
+fi
+
 # Detect the actual Electron version we'll be running
 ELECTRON_VER=""
 if [ -n "$ELECTRON_OVERRIDE_DIST_PATH" ] && command -v electron &>/dev/null; then
