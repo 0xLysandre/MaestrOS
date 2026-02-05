@@ -107,7 +107,7 @@ export function WeeklyView({ onTaskClick, onCreateTask }: WeeklyViewProps) {
     }),
   ];
 
-  const handleEventClick = (info: { event: { extendedProps: CalendarEventData['extendedProps'] } } & CalendarEventData) => {
+  const handleEventClick = (info: { event: { id: string; extendedProps: Record<string, unknown> } }) => {
     const eventData = calendarData.find((e) => e.id === info.event.id);
     if (eventData) {
       if (eventData.extendedProps.type === 'scheduled' && eventData.extendedProps.task) {

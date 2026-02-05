@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import toast from 'react-hot-toast';
+import { addDays, addHours, subDays, startOfToday, setHours } from 'date-fns';
 import type {
   Task,
   ScheduledTask,
@@ -10,6 +11,7 @@ import type {
   CreateTaskDTO,
   UpdateTaskDTO,
   TimeSlot,
+  MasteryLevel,
 } from '../types';
 
 // Default settings
@@ -33,6 +35,215 @@ const DEFAULT_SETTINGS: Settings = {
 const isElectron = typeof window !== 'undefined' &&
   typeof window.electronAPI !== 'undefined' &&
   window.electronAPI !== null;
+
+// Simple counter for generating unique IDs in browser mode
+let mockIdCounter = 100;
+function generateMockId(): string {
+  return `mock-${++mockIdCounter}`;
+}
+
+// Generate mock data for browser development mode
+function generateMockData() {
+  const today = startOfToday();
+  const now = new Date();
+
+  const mockTasks: Task[] = [
+    {
+      id: 'mock-1',
+      title: 'Review Cardiology - Heart Failure',
+      description: 'Review pathophysiology, diagnosis, and treatment of CHF',
+      masteryLevel: 1 as MasteryLevel,
+      nextReviewDate: now.toISOString(),
+      intervalDays: 1,
+      createdAt: subDays(now, 5).toISOString(),
+      estimatedDuration: 45,
+      tags: ['cardiology', 'exam-prep'],
+      isArchived: false,
+    },
+    {
+      id: 'mock-2',
+      title: 'Pharmacology - Antibiotics',
+      description: 'Mechanism of action, spectrum, and side effects',
+      masteryLevel: 2 as MasteryLevel,
+      nextReviewDate: addDays(now, 1).toISOString(),
+      intervalDays: 3,
+      createdAt: subDays(now, 10).toISOString(),
+      lastReviewedAt: subDays(now, 2).toISOString(),
+      estimatedDuration: 60,
+      tags: ['pharmacology'],
+      isArchived: false,
+    },
+    {
+      id: 'mock-3',
+      title: 'Anatomy - Brachial Plexus',
+      description: 'Nerve roots, trunks, divisions, cords, and branches',
+      masteryLevel: 3 as MasteryLevel,
+      nextReviewDate: addDays(now, 3).toISOString(),
+      intervalDays: 7,
+      createdAt: subDays(now, 14).toISOString(),
+      lastReviewedAt: subDays(now, 5).toISOString(),
+      estimatedDuration: 30,
+      tags: ['anatomy', 'upper-limb'],
+      isArchived: false,
+    },
+    {
+      id: 'mock-4',
+      title: 'Biochemistry - Krebs Cycle',
+      description: 'Key enzymes, substrates, and regulation',
+      masteryLevel: 4 as MasteryLevel,
+      nextReviewDate: addDays(now, 5).toISOString(),
+      intervalDays: 7,
+      createdAt: subDays(now, 21).toISOString(),
+      lastReviewedAt: subDays(now, 3).toISOString(),
+      estimatedDuration: 30,
+      tags: ['biochemistry'],
+      isArchived: false,
+    },
+    {
+      id: 'mock-5',
+      title: 'Histology - Epithelial Tissue',
+      description: 'Types, locations, and functions of epithelial tissues',
+      masteryLevel: 5 as MasteryLevel,
+      nextReviewDate: addDays(now, 14).toISOString(),
+      intervalDays: 21,
+      createdAt: subDays(now, 30).toISOString(),
+      lastReviewedAt: subDays(now, 7).toISOString(),
+      estimatedDuration: 20,
+      tags: ['histology'],
+      isArchived: false,
+    },
+    {
+      id: 'mock-6',
+      title: 'Pathology - Inflammation',
+      description: 'Acute vs chronic inflammation, mediators, and outcomes',
+      masteryLevel: 2 as MasteryLevel,
+      nextReviewDate: addDays(now, 2).toISOString(),
+      intervalDays: 3,
+      createdAt: subDays(now, 8).toISOString(),
+      estimatedDuration: 45,
+      tags: ['pathology', 'exam-prep'],
+      isArchived: false,
+    },
+  ];
+
+  const mockScheduledTasks: ScheduledTask[] = [
+    {
+      id: 'sched-1',
+      taskId: 'mock-1',
+      scheduledStart: setHours(today, 9).toISOString(),
+      scheduledEnd: setHours(today, 10).toISOString(),
+      completed: false,
+    },
+    {
+      id: 'sched-2',
+      taskId: 'mock-3',
+      scheduledStart: setHours(today, 14).toISOString(),
+      scheduledEnd: setHours(today, 15).toISOString(),
+      completed: false,
+    },
+    {
+      id: 'sched-3',
+      taskId: 'mock-2',
+      scheduledStart: setHours(addDays(today, 1), 10).toISOString(),
+      scheduledEnd: setHours(addDays(today, 1), 11).toISOString(),
+      completed: false,
+    },
+  ];
+
+  const mockCalendarEvents: CalendarEvent[] = [
+    {
+      id: 'cal-1',
+      googleEventId: 'google-1',
+      title: 'Anatomy Lecture',
+      startTime: setHours(today, 8).toISOString(),
+      endTime: setHours(today, 9).toISOString(),
+      location: 'Lecture Hall A',
+      lastSynced: now.toISOString(),
+      isGoogleEvent: true,
+    },
+    {
+      id: 'cal-2',
+      googleEventId: 'google-2',
+      title: 'Clinical Skills Lab',
+      startTime: setHours(today, 11).toISOString(),
+      endTime: setHours(today, 13).toISOString(),
+      location: 'Simulation Center',
+      lastSynced: now.toISOString(),
+      isGoogleEvent: true,
+    },
+    {
+      id: 'cal-3',
+      googleEventId: 'google-3',
+      title: 'Pharmacology Seminar',
+      startTime: setHours(addDays(today, 1), 13).toISOString(),
+      endTime: setHours(addDays(today, 1), 15).toISOString(),
+      location: 'Room 204',
+      lastSynced: now.toISOString(),
+      isGoogleEvent: true,
+    },
+  ];
+
+  const mockStats: UserStats = {
+    currentStreak: 5,
+    longestStreak: 12,
+    lastActivityDate: now.toISOString(),
+    totalTasksCompleted: 47,
+  };
+
+  const mockAchievements: Achievement[] = [
+    {
+      id: 'first-task',
+      title: 'First Steps',
+      description: 'Complete your first task',
+      unlockedAt: subDays(now, 25).toISOString(),
+      requirementType: 'tasks_completed',
+      requirementValue: 1,
+      icon: '🎯',
+    },
+    {
+      id: 'ten-tasks',
+      title: 'Getting Serious',
+      description: 'Complete 10 tasks',
+      unlockedAt: subDays(now, 15).toISOString(),
+      requirementType: 'tasks_completed',
+      requirementValue: 10,
+      icon: '📚',
+    },
+    {
+      id: 'week-streak',
+      title: 'Week Warrior',
+      description: 'Maintain a 7-day streak',
+      unlockedAt: subDays(now, 5).toISOString(),
+      requirementType: 'streak',
+      requirementValue: 7,
+      icon: '🔥',
+    },
+    {
+      id: 'fifty-tasks',
+      title: 'Half Century',
+      description: 'Complete 50 tasks',
+      requirementType: 'tasks_completed',
+      requirementValue: 50,
+      icon: '🏆',
+    },
+    {
+      id: 'month-streak',
+      title: 'Monthly Master',
+      description: 'Maintain a 30-day streak',
+      requirementType: 'streak',
+      requirementValue: 30,
+      icon: '⭐',
+    },
+  ];
+
+  return {
+    tasks: mockTasks,
+    scheduledTasks: mockScheduledTasks,
+    calendarEvents: mockCalendarEvents,
+    stats: mockStats,
+    achievements: mockAchievements,
+  };
+}
 
 interface AppState {
   // Data
@@ -115,8 +326,16 @@ export const useStore = create<AppState>((set, get) => ({
       set({ isLoading: true });
 
       if (!isElectron) {
-        console.warn('Running in browser mode - Electron API not available');
-        set({ isLoading: false });
+        console.info('Running in browser mode - loading mock data for preview');
+        const mock = generateMockData();
+        set({
+          tasks: mock.tasks,
+          scheduledTasks: mock.scheduledTasks,
+          calendarEvents: mock.calendarEvents,
+          stats: mock.stats,
+          achievements: mock.achievements,
+          isLoading: false,
+        });
         return;
       }
 
@@ -154,8 +373,29 @@ export const useStore = create<AppState>((set, get) => ({
 
   createTask: async (dto) => {
     if (!isElectron) {
-      toast.error('Not available in browser mode');
-      return null;
+      // Browser mode: create task in local state
+      const now = new Date().toISOString();
+      const intervalDays = DEFAULT_SETTINGS.urgencyLevels.find(
+        (l) => l.level === dto.masteryLevel
+      )?.daysInterval ?? 1;
+      const newTask: Task = {
+        id: generateMockId(),
+        title: dto.title,
+        description: dto.description,
+        masteryLevel: dto.masteryLevel,
+        customDeadline: dto.customDeadline,
+        nextReviewDate: dto.customDeadline ?? addDays(new Date(), intervalDays).toISOString(),
+        intervalDays,
+        createdAt: now,
+        estimatedDuration: dto.estimatedDuration,
+        pdfLink: dto.pdfLink,
+        notes: dto.notes,
+        tags: dto.tags,
+        isArchived: false,
+      };
+      set((state) => ({ tasks: [...state.tasks, newTask] }));
+      toast.success('Task created');
+      return newTask;
     }
     try {
       const response = await window.electronAPI.tasks.create(dto);
@@ -175,8 +415,19 @@ export const useStore = create<AppState>((set, get) => ({
 
   updateTask: async (dto) => {
     if (!isElectron) {
-      toast.error('Not available in browser mode');
-      return null;
+      // Browser mode: update task in local state
+      let updated: Task | null = null;
+      set((state) => ({
+        tasks: state.tasks.map((t) => {
+          if (t.id === dto.id) {
+            updated = { ...t, ...dto } as Task;
+            return updated;
+          }
+          return t;
+        }),
+      }));
+      if (updated) toast.success('Task updated');
+      return updated;
     }
     try {
       const response = await window.electronAPI.tasks.update(dto);
@@ -196,8 +447,10 @@ export const useStore = create<AppState>((set, get) => ({
 
   deleteTask: async (id) => {
     if (!isElectron) {
-      toast.error('Not available in browser mode');
-      return false;
+      // Browser mode: delete task from local state
+      set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) }));
+      toast.success('Task deleted');
+      return true;
     }
     try {
       const response = await window.electronAPI.tasks.delete(id);
@@ -217,8 +470,34 @@ export const useStore = create<AppState>((set, get) => ({
 
   completeTask: async (id, newMasteryLevel) => {
     if (!isElectron) {
-      toast.error('Not available in browser mode');
-      return null;
+      // Browser mode: complete task in local state
+      const now = new Date().toISOString();
+      const intervalDays = DEFAULT_SETTINGS.urgencyLevels.find(
+        (l) => l.level === newMasteryLevel
+      )?.daysInterval ?? 1;
+      let completed: Task | null = null;
+      set((state) => ({
+        tasks: state.tasks.map((t) => {
+          if (t.id === id) {
+            completed = {
+              ...t,
+              masteryLevel: newMasteryLevel as MasteryLevel,
+              lastReviewedAt: now,
+              completedAt: now,
+              nextReviewDate: addDays(new Date(), intervalDays).toISOString(),
+              intervalDays,
+            };
+            return completed;
+          }
+          return t;
+        }),
+        stats: {
+          ...state.stats,
+          totalTasksCompleted: state.stats.totalTasksCompleted + 1,
+        },
+      }));
+      if (completed) toast.success('Task completed!');
+      return completed;
     }
     try {
       const response = await window.electronAPI.tasks.complete(id, newMasteryLevel);
@@ -251,8 +530,19 @@ export const useStore = create<AppState>((set, get) => ({
 
   scheduleTask: async (taskId, start, end) => {
     if (!isElectron) {
-      toast.error('Not available in browser mode');
-      return null;
+      // Browser mode: schedule task in local state
+      const scheduled: ScheduledTask = {
+        id: generateMockId(),
+        taskId,
+        scheduledStart: start,
+        scheduledEnd: end,
+        completed: false,
+      };
+      set((state) => ({
+        scheduledTasks: [...state.scheduledTasks, scheduled],
+      }));
+      toast.success('Task scheduled');
+      return scheduled;
     }
     try {
       const response = await window.electronAPI.schedule.placeTask({
@@ -278,7 +568,20 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   updateScheduledTask: async (id, start, end) => {
-    if (!isElectron) return null;
+    if (!isElectron) {
+      // Browser mode: update in local state
+      let updated: ScheduledTask | null = null;
+      set((state) => ({
+        scheduledTasks: state.scheduledTasks.map((t) => {
+          if (t.id === id) {
+            updated = { ...t, scheduledStart: start, scheduledEnd: end };
+            return updated;
+          }
+          return t;
+        }),
+      }));
+      return updated;
+    }
     try {
       const response = await window.electronAPI.scheduled.update(id, {
         scheduledStart: start,
@@ -302,7 +605,12 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   deleteScheduledTask: async (id) => {
-    if (!isElectron) return false;
+    if (!isElectron) {
+      set((state) => ({
+        scheduledTasks: state.scheduledTasks.filter((t) => t.id !== id),
+      }));
+      return true;
+    }
     try {
       const response = await window.electronAPI.scheduled.delete(id);
       if (response.success) {
@@ -319,7 +627,19 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   completeScheduledTask: async (id) => {
-    if (!isElectron) return null;
+    if (!isElectron) {
+      let updated: ScheduledTask | null = null;
+      set((state) => ({
+        scheduledTasks: state.scheduledTasks.map((t) => {
+          if (t.id === id) {
+            updated = { ...t, completed: true, completedAt: new Date().toISOString() };
+            return updated;
+          }
+          return t;
+        }),
+      }));
+      return updated;
+    }
     try {
       const response = await window.electronAPI.scheduled.complete(id);
       if (response.success && response.data) {
@@ -339,7 +659,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   // Calendar
   fetchCalendarEvents: async (startDate, endDate) => {
-    if (!isElectron) return;
+    if (!isElectron) return; // Mock events already loaded
     try {
       const response = await window.electronAPI.calendar.getEvents(startDate, endDate);
       if (response.success && response.data) {
@@ -352,7 +672,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   syncCalendar: async () => {
     if (!isElectron) {
-      toast.error('Not available in browser mode');
+      toast('Calendar sync requires the desktop app', { icon: 'ℹ️' });
       return;
     }
     const { isGoogleConnected } = get();
@@ -380,7 +700,27 @@ export const useStore = create<AppState>((set, get) => ({
 
   // Scheduling
   findAvailableSlots: async (duration, startDate, endDate) => {
-    if (!isElectron) return [];
+    if (!isElectron) {
+      // Browser mode: generate some mock available slots
+      const start = new Date(startDate);
+      const slots: TimeSlot[] = [];
+      for (let d = 0; d < 5; d++) {
+        const day = addDays(start, d);
+        slots.push({
+          start: setHours(day, 10),
+          end: addHours(setHours(day, 10), duration / 60),
+          durationMinutes: duration,
+          score: 90 - d * 10,
+        });
+        slots.push({
+          start: setHours(day, 15),
+          end: addHours(setHours(day, 15), duration / 60),
+          durationMinutes: duration,
+          score: 80 - d * 10,
+        });
+      }
+      return slots.slice(0, 10);
+    }
     try {
       const response = await window.electronAPI.schedule.findSlots({
         taskDuration: duration,
@@ -400,7 +740,7 @@ export const useStore = create<AppState>((set, get) => ({
   // Google Auth
   connectGoogle: async () => {
     if (!isElectron) {
-      toast.error('Google Calendar connection requires the desktop app');
+      toast('Google Calendar connection requires the desktop app', { icon: 'ℹ️' });
       return;
     }
     try {
@@ -462,7 +802,11 @@ export const useStore = create<AppState>((set, get) => ({
   updateSettings: async (newSettings) => {
     if (!isElectron) {
       // In browser mode, just update local state
-      set((state) => ({ settings: { ...state.settings, ...newSettings } }));
+      set((state) => ({
+        settings: { ...state.settings, ...newSettings },
+        ...(newSettings.theme ? { theme: newSettings.theme } : {}),
+      }));
+      toast.success('Settings saved');
       return;
     }
     try {
