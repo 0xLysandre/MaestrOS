@@ -1,17 +1,24 @@
-import { google, calendar_v3 } from 'googleapis';
+import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
-import { BrowserWindow, safeStorage } from 'electron';
+import { BrowserWindow, safeStorage, app } from 'electron';
 import Store from 'electron-store';
+import * as http from 'http';
+import * as path from 'path';
 import { calendarEventQueries } from '../database/queries';
 import type { CalendarEvent, GoogleTokens } from '../../shared/types';
 
+// Load environment variables from .env file
+import * as dotenv from 'dotenv';
+dotenv.config({ path: path.join(app.getAppPath(), '.env') });
+
 const store = new Store();
 
-// These would normally be in environment variables
-// For development, you'll need to set these up in Google Cloud Console
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'YOUR_CLIENT_ID';
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'YOUR_CLIENT_SECRET';
-const REDIRECT_URI = 'http://localhost:3000/oauth/callback';
+// Get credentials from environment variables
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+
+// For desktop apps, we use loopback redirect with a local server
+const LOOPBACK_HOST = '127.0.0.1';
 
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar.readonly',
@@ -20,16 +27,26 @@ const SCOPES = [
 
 let oauth2Client: OAuth2Client | null = null;
 let syncInterval: NodeJS.Timeout | null = null;
+let currentRedirectUri: string = '';
 
-function getOAuth2Client(): OAuth2Client {
-  if (!oauth2Client) {
+function getOAuth2Client(redirectUri?: string): OAuth2Client {
+  const uri = redirectUri || currentRedirectUri || `http://${LOOPBACK_HOST}:3000/callback`;
+  if (!oauth2Client || (redirectUri && redirectUri !== currentRedirectUri)) {
+    currentRedirectUri = uri;
     oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
-      REDIRECT_URI
+      uri
     );
   }
   return oauth2Client;
+}
+
+// Check if Google credentials are configured
+export function hasGoogleCredentials(): boolean {
+  return !!(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET &&
+    GOOGLE_CLIENT_ID !== 'your_client_id_here.apps.googleusercontent.com' &&
+    GOOGLE_CLIENT_SECRET !== 'your_client_secret_here');
 }
 
 // Securely store tokens
@@ -87,65 +104,137 @@ export async function isAuthenticated(): Promise<boolean> {
 }
 
 export async function authenticate(): Promise<void> {
-  const client = getOAuth2Client();
-
-  const authUrl = client.generateAuthUrl({
-    access_type: 'offline',
-    scope: SCOPES,
-    prompt: 'consent',
-  });
+  // Check if credentials are configured
+  if (!hasGoogleCredentials()) {
+    throw new Error(
+      'Google Calendar credentials not configured. Please create a .env file with GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET. See .env.example for instructions.'
+    );
+  }
 
   return new Promise((resolve, reject) => {
-    // Create auth window
-    const authWindow = new BrowserWindow({
-      width: 600,
-      height: 700,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-      },
-    });
+    // Create a local HTTP server to receive the OAuth callback
+    const server = http.createServer(async (req, res) => {
+      try {
+        const url = new URL(req.url || '', `http://${LOOPBACK_HOST}`);
 
-    authWindow.loadURL(authUrl);
+        if (url.pathname === '/callback') {
+          const code = url.searchParams.get('code');
+          const error = url.searchParams.get('error');
 
-    // Handle redirect
-    authWindow.webContents.on('will-redirect', async (event, url) => {
-      if (url.startsWith(REDIRECT_URI)) {
-        event.preventDefault();
+          if (error) {
+            res.writeHead(400, { 'Content-Type': 'text/html' });
+            res.end(`
+              <html>
+                <body style="font-family: system-ui; text-align: center; padding: 50px;">
+                  <h1 style="color: #ef4444;">Authentication Failed</h1>
+                  <p>Error: ${error}</p>
+                  <p>You can close this window.</p>
+                </body>
+              </html>
+            `);
+            server.close();
+            reject(new Error(error));
+            return;
+          }
 
-        const urlObj = new URL(url);
-        const code = urlObj.searchParams.get('code');
-        const error = urlObj.searchParams.get('error');
+          if (code) {
+            try {
+              const client = getOAuth2Client();
+              const { tokens } = await client.getToken(code);
+              client.setCredentials(tokens);
 
-        if (error) {
-          authWindow.close();
-          reject(new Error(error));
-          return;
-        }
+              storeTokens({
+                accessToken: tokens.access_token!,
+                refreshToken: tokens.refresh_token!,
+                expiryDate: tokens.expiry_date!,
+              });
 
-        if (code) {
-          try {
-            const { tokens } = await client.getToken(code);
-            client.setCredentials(tokens);
+              res.writeHead(200, { 'Content-Type': 'text/html' });
+              res.end(`
+                <html>
+                  <body style="font-family: system-ui; text-align: center; padding: 50px;">
+                    <h1 style="color: #22c55e;">Connected Successfully!</h1>
+                    <p>Your Google Calendar is now connected to MedPlanOS.</p>
+                    <p>You can close this window and return to the app.</p>
+                    <script>setTimeout(() => window.close(), 2000);</script>
+                  </body>
+                </html>
+              `);
 
-            storeTokens({
-              accessToken: tokens.access_token!,
-              refreshToken: tokens.refresh_token!,
-              expiryDate: tokens.expiry_date!,
-            });
-
-            authWindow.close();
-            resolve();
-          } catch (err) {
-            authWindow.close();
-            reject(err);
+              server.close();
+              resolve();
+            } catch (err) {
+              res.writeHead(500, { 'Content-Type': 'text/html' });
+              res.end(`
+                <html>
+                  <body style="font-family: system-ui; text-align: center; padding: 50px;">
+                    <h1 style="color: #ef4444;">Authentication Failed</h1>
+                    <p>Could not exchange code for tokens.</p>
+                    <p>You can close this window.</p>
+                  </body>
+                </html>
+              `);
+              server.close();
+              reject(err);
+            }
           }
         }
+      } catch (err) {
+        server.close();
+        reject(err);
       }
     });
 
-    authWindow.on('closed', () => {
-      reject(new Error('Authentication window was closed'));
+    // Find an available port and start the server
+    server.listen(0, LOOPBACK_HOST, () => {
+      const address = server.address();
+      if (!address || typeof address === 'string') {
+        server.close();
+        reject(new Error('Failed to start local OAuth server'));
+        return;
+      }
+
+      const port = address.port;
+      const redirectUri = `http://${LOOPBACK_HOST}:${port}/callback`;
+
+      // Create OAuth client with this redirect URI
+      const client = getOAuth2Client(redirectUri);
+
+      const authUrl = client.generateAuthUrl({
+        access_type: 'offline',
+        scope: SCOPES,
+        prompt: 'consent',
+      });
+
+      // Open the auth URL in a new browser window
+      const authWindow = new BrowserWindow({
+        width: 600,
+        height: 700,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+        },
+      });
+
+      authWindow.loadURL(authUrl);
+
+      // Handle window close
+      authWindow.on('closed', () => {
+        // Give a short delay to check if auth completed
+        setTimeout(() => {
+          server.close();
+        }, 1000);
+      });
+
+      // Timeout after 5 minutes
+      setTimeout(() => {
+        server.close();
+        reject(new Error('Authentication timed out'));
+      }, 5 * 60 * 1000);
+    });
+
+    server.on('error', (err) => {
+      reject(err);
     });
   });
 }
