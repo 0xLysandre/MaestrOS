@@ -105,13 +105,16 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
       await updateTask({ id: task.id, ...taskData });
     } else {
       const newTask = await createTask(taskData);
+      console.log('[TaskModal] Created task:', newTask);
       // If user selected a time slot, schedule the newly created task
       if (newTask && pendingSchedule) {
-        await scheduleTask(
+        console.log('[TaskModal] Scheduling task for:', pendingSchedule.start, '-', pendingSchedule.end);
+        const scheduled = await scheduleTask(
           newTask.id,
           pendingSchedule.start.toISOString(),
           pendingSchedule.end.toISOString()
         );
+        console.log('[TaskModal] Schedule result:', scheduled);
       }
     }
 

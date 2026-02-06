@@ -63,6 +63,9 @@ export function WeeklyView({ onTaskClick, onCreateTask }: WeeklyViewProps) {
     fetchScheduledTasks(weekStart.toISOString(), weekEnd.toISOString());
   }, [currentDate, fetchCalendarEvents, fetchScheduledTasks]);
 
+  // Debug logging
+  console.log('[WeeklyView] Rendering with scheduledTasks:', scheduledTasks.length, scheduledTasks);
+
   // Convert data to calendar events
   const calendarData: CalendarEventData[] = [
     // Google Calendar events
