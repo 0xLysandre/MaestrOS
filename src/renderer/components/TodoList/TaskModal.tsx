@@ -7,6 +7,7 @@ import {
   Link,
   Tag,
   Zap,
+  CalendarPlus,
 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { clsx } from 'clsx';
@@ -30,7 +31,7 @@ const MASTERY_LEVELS: { level: MasteryLevel; name: string; description: string }
 ];
 
 export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
-  const { createTask, updateTask, scheduleTask } = useStore();
+  const { createTask, updateTask, scheduleTask, findAvailableSlots } = useStore();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -105,16 +106,13 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
       await updateTask({ id: task.id, ...taskData });
     } else {
       const newTask = await createTask(taskData);
-      console.log('[TaskModal] Created task:', newTask);
       // If user selected a time slot, schedule the newly created task
       if (newTask && pendingSchedule) {
-        console.log('[TaskModal] Scheduling task for:', pendingSchedule.start, '-', pendingSchedule.end);
-        const scheduled = await scheduleTask(
+        await scheduleTask(
           newTask.id,
           pendingSchedule.start.toISOString(),
           pendingSchedule.end.toISOString()
         );
-        console.log('[TaskModal] Schedule result:', scheduled);
       }
     }
 
@@ -132,6 +130,56 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
       setPendingSchedule({ start, end });
       setShowScheduler(false);
     }
+  };
+
+  // Create task and automatically schedule to best available slot
+  const handleCreateAndSchedule = async () => {
+    if (!formData.title.trim()) return;
+
+    setIsSubmitting(true);
+
+    const taskData: CreateTaskDTO = {
+      title: formData.title.trim(),
+      description: formData.description.trim() || undefined,
+      masteryLevel: formData.masteryLevel,
+      estimatedDuration: formData.estimatedDuration,
+      customDeadline: formData.customDeadline
+        ? new Date(formData.customDeadline).toISOString()
+        : undefined,
+      pdfLink: formData.pdfLink.trim() || undefined,
+      notes: formData.notes.trim() || undefined,
+      tags: formData.tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean),
+    };
+
+    // Create the task first
+    const newTask = await createTask(taskData);
+
+    if (newTask) {
+      // Find the best available slot
+      const startDate = new Date();
+      const endDate = addDays(startDate, 7);
+      const slots = await findAvailableSlots(
+        formData.estimatedDuration,
+        startDate.toISOString(),
+        endDate.toISOString()
+      );
+
+      if (slots.length > 0) {
+        // Schedule to the best (first) slot
+        const bestSlot = slots[0];
+        await scheduleTask(
+          newTask.id,
+          bestSlot.start instanceof Date ? bestSlot.start.toISOString() : bestSlot.start,
+          bestSlot.end instanceof Date ? bestSlot.end.toISOString() : bestSlot.end
+        );
+      }
+    }
+
+    setIsSubmitting(false);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -359,6 +407,17 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
             >
               Cancel
             </button>
+            {!task && (
+              <button
+                type="button"
+                onClick={handleCreateAndSchedule}
+                disabled={isSubmitting || !formData.title.trim()}
+                className="px-4 py-2 text-sm font-medium bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <CalendarPlus size={16} />
+                {isSubmitting ? 'Scheduling...' : 'Create & Schedule'}
+              </button>
+            )}
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || !formData.title.trim()}

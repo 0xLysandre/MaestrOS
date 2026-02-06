@@ -529,7 +529,6 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   scheduleTask: async (taskId, start, end) => {
-    console.log('[Store] scheduleTask called:', { taskId, start, end, isElectron });
     if (!isElectron) {
       // Browser mode: schedule task in local state
       const scheduled: ScheduledTask = {
@@ -539,12 +538,10 @@ export const useStore = create<AppState>((set, get) => ({
         scheduledEnd: end,
         completed: false,
       };
-      set((state) => {
-        console.log('[Store] Browser mode - adding scheduled task. Current count:', state.scheduledTasks.length);
-        return { scheduledTasks: [...state.scheduledTasks, scheduled] };
-      });
+      set((state) => ({
+        scheduledTasks: [...state.scheduledTasks, scheduled],
+      }));
       toast.success('Task scheduled');
-      console.log('[Store] Scheduled task created:', scheduled);
       return scheduled;
     }
     try {
@@ -553,21 +550,18 @@ export const useStore = create<AppState>((set, get) => ({
         startTime: start,
         endTime: end,
       });
-      console.log('[Store] placeTask response:', response);
       if (response.success && response.data) {
-        set((state) => {
-          console.log('[Store] Electron mode - adding scheduled task. Current count:', state.scheduledTasks.length);
-          return { scheduledTasks: [...state.scheduledTasks, response.data!] };
-        });
+        set((state) => ({
+          scheduledTasks: [...state.scheduledTasks, response.data!],
+        }));
         toast.success('Task scheduled');
         return response.data;
       } else {
-        console.error('[Store] placeTask failed:', response.error);
         toast.error(response.error || 'Failed to schedule task');
         return null;
       }
     } catch (error) {
-      console.error('[Store] Failed to schedule task:', error);
+      console.error('Failed to schedule task:', error);
       toast.error('Failed to schedule task');
       return null;
     }
