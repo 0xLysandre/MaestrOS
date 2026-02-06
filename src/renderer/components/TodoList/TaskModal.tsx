@@ -44,6 +44,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
   });
   const [showScheduler, setShowScheduler] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingSchedule, setPendingSchedule] = useState<{ start: Date; end: Date } | null>(null);
 
   // Reset form when modal opens/closes or task changes
   useEffect(() => {
@@ -74,6 +75,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
         });
       }
       setShowScheduler(false);
+      setPendingSchedule(null);
     }
   }, [isOpen, task]);
 
@@ -102,7 +104,15 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
     if (task) {
       await updateTask({ id: task.id, ...taskData });
     } else {
-      await createTask(taskData);
+      const newTask = await createTask(taskData);
+      // If user selected a time slot, schedule the newly created task
+      if (newTask && pendingSchedule) {
+        await scheduleTask(
+          newTask.id,
+          pendingSchedule.start.toISOString(),
+          pendingSchedule.end.toISOString()
+        );
+      }
     }
 
     setIsSubmitting(false);
@@ -111,7 +121,12 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
 
   const handleSchedule = async (start: Date, end: Date) => {
     if (task) {
+      // Existing task: schedule immediately
       await scheduleTask(task.id, start.toISOString(), end.toISOString());
+      setShowScheduler(false);
+    } else {
+      // New task: store the slot to schedule after creation
+      setPendingSchedule({ start, end });
       setShowScheduler(false);
     }
   };
@@ -304,28 +319,32 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
               />
             </div>
 
-            {/* Time Slot Suggester (for existing tasks) */}
-            {task && (
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button
-                  type="button"
-                  onClick={() => setShowScheduler(!showScheduler)}
-                  className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
-                >
-                  <Calendar size={16} />
-                  {showScheduler ? 'Hide scheduler' : 'Schedule this task'}
-                </button>
+            {/* Time Slot Suggester */}
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={() => setShowScheduler(!showScheduler)}
+                className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
+              >
+                <Calendar size={16} />
+                {showScheduler ? 'Hide scheduler' : pendingSchedule ? 'Change scheduled time' : 'Schedule this task'}
+              </button>
 
-                {showScheduler && (
-                  <div className="mt-4">
-                    <TimeSlotSuggester
-                      duration={formData.estimatedDuration}
-                      onSelectSlot={handleSchedule}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
+              {pendingSchedule && !showScheduler && (
+                <div className="mt-2 text-sm text-green-600 dark:text-green-400">
+                  Scheduled for: {format(pendingSchedule.start, 'MMM d, h:mm a')} - {format(pendingSchedule.end, 'h:mm a')}
+                </div>
+              )}
+
+              {showScheduler && (
+                <div className="mt-4">
+                  <TimeSlotSuggester
+                    duration={formData.estimatedDuration}
+                    onSelectSlot={handleSchedule}
+                  />
+                </div>
+              )}
+            </div>
           </form>
 
           {/* Footer */}
