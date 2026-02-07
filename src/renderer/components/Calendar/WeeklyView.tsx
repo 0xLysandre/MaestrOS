@@ -174,6 +174,14 @@ export function WeeklyView({ onTaskClick, onCreateTask }: WeeklyViewProps) {
           center: 'title',
           right: 'timeGridWeek,timeGridDay,dayGridMonth',
         }}
+        buttonText={{
+          today: 'Today',
+          month: 'Month',
+          week: 'Week',
+          day: 'Day',
+          prev: '‹',
+          next: '›',
+        }}
         events={calendarData}
         eventClick={handleEventClick}
         eventDrop={handleEventDrop}
