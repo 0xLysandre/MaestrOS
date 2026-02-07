@@ -300,6 +300,10 @@ interface AppState {
 
   // Theme
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
+
+  // Data Export/Import
+  exportData: () => void;
+  importData: (file: File) => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -855,6 +859,72 @@ export const useStore = create<AppState>((set, get) => ({
   setTheme: (theme) => {
     set({ theme });
     get().updateSettings({ theme });
+  },
+
+  // Data Export
+  exportData: () => {
+    const { tasks, scheduledTasks, settings, stats, achievements } = get();
+    const exportObj = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      tasks,
+      scheduledTasks,
+      settings,
+      stats,
+      achievements,
+    };
+
+    const blob = new Blob([JSON.stringify(exportObj, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `medplanos-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('Data exported successfully');
+  },
+
+  // Data Import
+  importData: async (file: File) => {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (!data.version || !data.tasks) {
+        toast.error('Invalid backup file format');
+        return;
+      }
+
+      // Validate and import tasks
+      if (Array.isArray(data.tasks)) {
+        set({ tasks: data.tasks });
+      }
+
+      if (Array.isArray(data.scheduledTasks)) {
+        set({ scheduledTasks: data.scheduledTasks });
+      }
+
+      if (data.settings) {
+        set({ settings: data.settings, theme: data.settings.theme || 'system' });
+      }
+
+      if (data.stats) {
+        set({ stats: data.stats });
+      }
+
+      if (Array.isArray(data.achievements)) {
+        set({ achievements: data.achievements });
+      }
+
+      toast.success('Data imported successfully');
+    } catch (error) {
+      console.error('Failed to import data:', error);
+      toast.error('Failed to import data. Please check the file format.');
+    }
   },
 }));
 

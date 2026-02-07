@@ -28,12 +28,14 @@ export function Header({ currentView, onCreateTask, isGoogleConnected }: HeaderP
   const { syncCalendar, isSyncing, theme, setTheme, connectGoogle } = useStore();
 
   const handleThemeToggle = () => {
-    if (theme === 'light') {
-      setTheme('dark');
-    } else if (theme === 'dark') {
-      setTheme('system');
-    } else {
+    // Get the current actual appearance (accounting for system preference)
+    const isDarkMode = document.documentElement.classList.contains('dark');
+
+    // Simple toggle: if currently dark, go light; if currently light, go dark
+    if (isDarkMode) {
       setTheme('light');
+    } else {
+      setTheme('dark');
     }
   };
 

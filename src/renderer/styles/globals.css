@@ -30,11 +30,20 @@
 }
 
 .fc .fc-button-primary {
-  @apply bg-primary-500 border-primary-500 hover:bg-primary-600 hover:border-primary-600;
+  @apply bg-primary-500 border-primary-500 text-white hover:bg-primary-600 hover:border-primary-600;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  @apply bg-primary-700 border-primary-700;
 }
 
 .fc .fc-button-primary:disabled {
-  @apply bg-primary-300 border-primary-300;
+  @apply bg-primary-300 border-primary-300 text-white/70;
+}
+
+/* Ensure FullCalendar header buttons have proper text visibility */
+.fc .fc-toolbar-chunk button {
+  @apply text-white font-medium;
 }
 
 .fc .fc-daygrid-day-number,
