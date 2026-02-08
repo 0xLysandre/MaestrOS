@@ -34,16 +34,12 @@ jobs:
         with:
           node-version: '20'
 
-      # Fix for npm optional dependency bug on macOS
-      - name: Clean install (macOS)
-        if: matrix.os == 'macos-latest'
+      # Fix for npm optional dependency bug with rollup native modules
+      - name: Clean install
+        shell: bash
         run: |
           rm -f package-lock.json
           npm install
-
-      - name: Install dependencies (Linux/Windows)
-        if: matrix.os != 'macos-latest'
-        run: npm install
 
       - name: Build application
         run: npm run build
