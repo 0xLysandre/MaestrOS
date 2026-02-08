@@ -1,5 +1,6 @@
-import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme, dialog } from 'electron';
 import path from 'path';
+import fs from 'fs';
 import { initializeDatabase } from './database/db';
 import { setupIpcHandlers } from './ipc-handlers';
 
@@ -34,14 +35,23 @@ function createWindow(): void {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    // In production, load from the correct path
-    const indexPath = path.join(app.getAppPath(), 'dist', 'renderer', 'index.html');
-    mainWindow.loadFile(indexPath);
+    // In production, use __dirname which works correctly in asar
+    const indexPath = path.join(__dirname, '..', 'renderer', 'index.html');
+
+    // Check if file exists and show error if not
+    if (!fs.existsSync(indexPath)) {
+      dialog.showErrorBox('Error', `Cannot find: ${indexPath}\n\n__dirname: ${__dirname}\nappPath: ${app.getAppPath()}`);
+    }
+
+    mainWindow.loadFile(indexPath).catch((err) => {
+      dialog.showErrorBox('Load Error', `Failed to load app: ${err.message}`);
+    });
   }
 
   // Debug: Log any load errors
   mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
     console.error('Failed to load:', errorCode, errorDescription);
+    dialog.showErrorBox('Load Failed', `Error ${errorCode}: ${errorDescription}`);
   });
 
   mainWindow.on('closed', () => {
