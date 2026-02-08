@@ -13,10 +13,6 @@ dotenv.config({ path: path.join(app.getAppPath(), '.env') });
 
 const store = new Store();
 
-// Get credentials from environment variables
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
-
 // For desktop apps, we use loopback redirect with a local server
 const LOOPBACK_HOST = '127.0.0.1';
 
@@ -29,13 +25,27 @@ let oauth2Client: OAuth2Client | null = null;
 let syncInterval: NodeJS.Timeout | null = null;
 let currentRedirectUri: string = '';
 
+// Get Google credentials from settings or environment variables
+function getGoogleCredentials(): { clientId: string; clientSecret: string } {
+  // First try to get from settings (stored via electron-store)
+  const settings = store.get('settings') as { googleClientId?: string; googleClientSecret?: string } | undefined;
+
+  const clientId = settings?.googleClientId || process.env.GOOGLE_CLIENT_ID || '';
+  const clientSecret = settings?.googleClientSecret || process.env.GOOGLE_CLIENT_SECRET || '';
+
+  return { clientId, clientSecret };
+}
+
 function getOAuth2Client(redirectUri?: string): OAuth2Client {
+  const { clientId, clientSecret } = getGoogleCredentials();
   const uri = redirectUri || currentRedirectUri || `http://${LOOPBACK_HOST}:3000/callback`;
+
+  // Always recreate if credentials might have changed
   if (!oauth2Client || (redirectUri && redirectUri !== currentRedirectUri)) {
     currentRedirectUri = uri;
     oauth2Client = new google.auth.OAuth2(
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET,
+      clientId,
+      clientSecret,
       uri
     );
   }
@@ -44,9 +54,11 @@ function getOAuth2Client(redirectUri?: string): OAuth2Client {
 
 // Check if Google credentials are configured
 export function hasGoogleCredentials(): boolean {
-  return !!(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET &&
-    GOOGLE_CLIENT_ID !== 'your_client_id_here.apps.googleusercontent.com' &&
-    GOOGLE_CLIENT_SECRET !== 'your_client_secret_here');
+  const { clientId, clientSecret } = getGoogleCredentials();
+  return !!(clientId && clientSecret &&
+    clientId !== 'your_client_id_here.apps.googleusercontent.com' &&
+    clientSecret !== 'your_client_secret_here' &&
+    clientId.length > 0 && clientSecret.length > 0);
 }
 
 // Securely store tokens
@@ -107,7 +119,7 @@ export async function authenticate(): Promise<void> {
   // Check if credentials are configured
   if (!hasGoogleCredentials()) {
     throw new Error(
-      'Google Calendar credentials not configured. Please create a .env file with GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET. See .env.example for instructions.'
+      'Google Calendar credentials not configured. Please go to Settings → Google API Configuration and enter your Client ID and Client Secret from Google Cloud Console.'
     );
   }
 

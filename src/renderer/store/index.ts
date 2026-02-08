@@ -29,6 +29,8 @@ const DEFAULT_SETTINGS: Settings = {
   ],
   notificationsEnabled: true,
   autoSyncInterval: 15,
+  googleClientId: '',
+  googleClientSecret: '',
 };
 
 // Check if running inside Electron

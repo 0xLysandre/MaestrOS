@@ -82,6 +82,9 @@ export interface Settings {
   urgencyLevels: UrgencyLevelConfig[];
   notificationsEnabled: boolean;
   autoSyncInterval: number;
+  // Google API credentials
+  googleClientId?: string;
+  googleClientSecret?: string;
 }
 
 // IPC Types
