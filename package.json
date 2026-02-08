@@ -75,6 +75,7 @@
   "build": {
     "appId": "com.medscheduler.app",
     "productName": "Medical Scheduler",
+    "publish": null,
     "directories": {
       "output": "release"
     },
