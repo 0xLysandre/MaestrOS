@@ -34,8 +34,15 @@ function createWindow(): void {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+    // In production, load from the correct path
+    const indexPath = path.join(app.getAppPath(), 'dist', 'renderer', 'index.html');
+    mainWindow.loadFile(indexPath);
   }
+
+  // Debug: Log any load errors
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
+    console.error('Failed to load:', errorCode, errorDescription);
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
