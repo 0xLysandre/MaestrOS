@@ -28,7 +28,10 @@
     "spaced-repetition",
     "calendar"
   ],
-  "author": "",
+  "author": {
+    "name": "MedPlanOS",
+    "email": "medplanos@users.noreply.github.com"
+  },
   "license": "MIT",
   "devDependencies": {
     "@electron/rebuild": "^3.6.0",

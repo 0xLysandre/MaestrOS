@@ -13,6 +13,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -32,9 +33,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      - name: Install dependencies
+      # Fix for npm optional dependency bug on macOS
+      - name: Clean install (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          rm -f package-lock.json
+          npm install
+
+      - name: Install dependencies (Linux/Windows)
+        if: matrix.os != 'macos-latest'
         run: npm install
 
       - name: Build application
@@ -71,7 +79,7 @@ jobs:
           merge-multiple: true
 
       - name: List artifacts
-        run: find artifacts -type f
+        run: find artifacts -type f || echo "No artifacts found"
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
