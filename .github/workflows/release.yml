@@ -24,6 +24,8 @@ jobs:
             platform: mac
 
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -44,10 +46,9 @@ jobs:
       - name: Build application
         run: npm run build
 
+      # Build without publishing (no GH_TOKEN = no auto-publish)
       - name: Package for ${{ matrix.platform }}
         run: npm run package:${{ matrix.platform }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
