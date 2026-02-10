@@ -13,11 +13,15 @@
     "build:renderer": "vite build",
     "start": "electron .",
     "electron:dev": "wait-on http://localhost:5173 && electron .",
-    "package": "npm run build && electron-builder",
-    "package:mac": "npm run build && electron-builder --mac",
-    "package:win": "npm run build && electron-builder --win",
-    "package:linux": "npm run build && electron-builder --linux",
-    "postinstall": "electron-rebuild"
+    "package": "npm run build && electron-builder --publish never",
+    "package:mac": "npm run build && electron-builder --mac --publish never",
+    "package:win": "npm run build && electron-builder --win --publish never",
+    "package:linux": "npm run build && electron-builder --linux --publish never",
+    "publish": "npm run build && electron-builder --publish always",
+    "publish:mac": "npm run build && electron-builder --mac --publish always",
+    "publish:win": "npm run build && electron-builder --win --publish always",
+    "publish:linux": "npm run build && electron-builder --linux --publish always",
+    "postinstall": "electron-builder install-app-deps"
   },
   "keywords": [
     "electron",
@@ -79,7 +83,7 @@
     "publish": {
       "provider": "github",
       "owner": "0xLysandre",
-      "repo": "MedPlanOS"
+      "repo": "MaestrOS"
     },
     "directories": {
       "output": "release"
@@ -88,33 +92,25 @@
       "dist/**/*",
       "package.json"
     ],
-    "extraResources": [
-      {
-        "from": "assets/",
-        "to": "assets/"
-      }
-    ],
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
         "dmg",
         "zip"
-      ],
-      "icon": "assets/icon.icns"
+      ]
     },
     "win": {
       "target": [
         "nsis",
         "portable"
-      ],
-      "icon": "assets/icon.ico"
+      ]
     },
     "linux": {
       "target": [
         "AppImage",
         "deb"
       ],
-      "icon": "assets/icon.png"
+      "category": "Utility"
     }
   }
 }
