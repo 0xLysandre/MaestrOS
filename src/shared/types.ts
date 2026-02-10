@@ -7,6 +7,7 @@ export interface Task {
   customDeadline?: string; // ISO date string
   nextReviewDate: string; // ISO date string
   intervalDays: number;
+  reviewCount: number; // Number of consecutive successful reviews
   createdAt: string; // ISO date string
   lastReviewedAt?: string; // ISO date string
   completedAt?: string; // ISO date string

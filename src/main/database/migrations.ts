@@ -104,6 +104,15 @@ const migrations: Migration[] = [
       `);
     },
   },
+  {
+    version: 2,
+    up: (db) => {
+      // Add review_count column for spaced repetition tracking
+      db.exec(`
+        ALTER TABLE tasks ADD COLUMN review_count INTEGER DEFAULT 0;
+      `);
+    },
+  },
 ];
 
 export function runMigrations(db: Database.Database): void {

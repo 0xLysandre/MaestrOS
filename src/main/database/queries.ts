@@ -11,6 +11,7 @@ import type {
   MasteryLevel,
 } from '../../shared/types';
 import { DEFAULT_URGENCY_LEVELS, ACHIEVEMENTS } from '../../shared/constants';
+import { calculateProgressiveInterval } from '../services/spaced-repetition';
 
 // Helper to parse JSON safely
 function parseJson<T>(json: string | null, fallback: T): T {
@@ -37,9 +38,9 @@ export const taskQueries = {
     db.prepare(
       `INSERT INTO tasks (
         id, title, description, mastery_level, custom_deadline,
-        next_review_date, interval_days, created_at, estimated_duration,
+        next_review_date, interval_days, review_count, created_at, estimated_duration,
         pdf_link, notes, tags, is_archived
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, 0)`
     ).run(
       id,
       dto.title,
@@ -126,9 +127,31 @@ export const taskQueries = {
     if (!task) return null;
 
     const now = new Date().toISOString();
-    const intervalDays = DEFAULT_URGENCY_LEVELS.find(
+
+    // Spaced repetition logic:
+    // - If level increased or stayed same = successful review, increment count
+    // - If level decreased = needs more work, reset review count
+    const wasSuccessful = newMasteryLevel >= task.masteryLevel;
+    const newReviewCount = wasSuccessful ? task.reviewCount + 1 : 0;
+
+    // Get base interval from level config
+    const baseInterval = DEFAULT_URGENCY_LEVELS.find(
       (l) => l.level === newMasteryLevel
     )?.daysInterval ?? 1;
+
+    // Apply progressive spacing for successful reviews
+    // The more consecutive successful reviews, the longer the interval
+    let intervalDays: number;
+    if (wasSuccessful && newReviewCount > 0) {
+      // Use progressive interval: 1 -> 3 -> 7 -> 14 -> 21 -> 30 -> 45 -> 60+ days
+      intervalDays = calculateProgressiveInterval(newReviewCount - 1);
+      // But don't go below the level's base interval
+      intervalDays = Math.max(intervalDays, baseInterval);
+    } else {
+      // Failed review: use base interval for the level
+      intervalDays = baseInterval;
+    }
+
     const nextReviewDate = new Date(
       Date.now() + intervalDays * 24 * 60 * 60 * 1000
     ).toISOString();
@@ -139,9 +162,10 @@ export const taskQueries = {
         last_reviewed_at = ?,
         completed_at = ?,
         next_review_date = ?,
-        interval_days = ?
+        interval_days = ?,
+        review_count = ?
       WHERE id = ?`
-    ).run(newMasteryLevel, now, now, nextReviewDate, intervalDays, id);
+    ).run(newMasteryLevel, now, now, nextReviewDate, intervalDays, newReviewCount, id);
 
     return this.getById(id);
   },
@@ -185,6 +209,7 @@ export const taskQueries = {
       customDeadline: row.custom_deadline as string | undefined,
       nextReviewDate: row.next_review_date as string,
       intervalDays: row.interval_days as number,
+      reviewCount: (row.review_count as number) ?? 0,
       createdAt: row.created_at as string,
       lastReviewedAt: row.last_reviewed_at as string | undefined,
       completedAt: row.completed_at as string | undefined,

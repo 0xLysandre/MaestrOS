@@ -58,6 +58,7 @@ function generateMockData() {
       masteryLevel: 1 as MasteryLevel,
       nextReviewDate: now.toISOString(),
       intervalDays: 1,
+      reviewCount: 0,
       createdAt: subDays(now, 5).toISOString(),
       estimatedDuration: 45,
       tags: ['cardiology', 'exam-prep'],
@@ -70,6 +71,7 @@ function generateMockData() {
       masteryLevel: 2 as MasteryLevel,
       nextReviewDate: addDays(now, 1).toISOString(),
       intervalDays: 3,
+      reviewCount: 1,
       createdAt: subDays(now, 10).toISOString(),
       lastReviewedAt: subDays(now, 2).toISOString(),
       estimatedDuration: 60,
@@ -83,6 +85,7 @@ function generateMockData() {
       masteryLevel: 3 as MasteryLevel,
       nextReviewDate: addDays(now, 3).toISOString(),
       intervalDays: 7,
+      reviewCount: 2,
       createdAt: subDays(now, 14).toISOString(),
       lastReviewedAt: subDays(now, 5).toISOString(),
       estimatedDuration: 30,
@@ -96,6 +99,7 @@ function generateMockData() {
       masteryLevel: 4 as MasteryLevel,
       nextReviewDate: addDays(now, 5).toISOString(),
       intervalDays: 7,
+      reviewCount: 3,
       createdAt: subDays(now, 21).toISOString(),
       lastReviewedAt: subDays(now, 3).toISOString(),
       estimatedDuration: 30,
@@ -109,6 +113,7 @@ function generateMockData() {
       masteryLevel: 5 as MasteryLevel,
       nextReviewDate: addDays(now, 14).toISOString(),
       intervalDays: 21,
+      reviewCount: 5,
       createdAt: subDays(now, 30).toISOString(),
       lastReviewedAt: subDays(now, 7).toISOString(),
       estimatedDuration: 20,
@@ -122,6 +127,7 @@ function generateMockData() {
       masteryLevel: 2 as MasteryLevel,
       nextReviewDate: addDays(now, 2).toISOString(),
       intervalDays: 3,
+      reviewCount: 1,
       createdAt: subDays(now, 8).toISOString(),
       estimatedDuration: 45,
       tags: ['pathology', 'exam-prep'],
@@ -393,6 +399,7 @@ export const useStore = create<AppState>((set, get) => ({
         customDeadline: dto.customDeadline,
         nextReviewDate: dto.customDeadline ?? addDays(new Date(), intervalDays).toISOString(),
         intervalDays,
+        reviewCount: 0,
         createdAt: now,
         estimatedDuration: dto.estimatedDuration,
         pdfLink: dto.pdfLink,
@@ -477,32 +484,63 @@ export const useStore = create<AppState>((set, get) => ({
 
   completeTask: async (id, newMasteryLevel) => {
     if (!isElectron) {
-      // Browser mode: complete task in local state
+      // Browser mode: complete task in local state with spaced repetition
       const now = new Date().toISOString();
-      const intervalDays = DEFAULT_SETTINGS.urgencyLevels.find(
-        (l) => l.level === newMasteryLevel
-      )?.daysInterval ?? 1;
+
+      // Progressive interval pattern: 1 -> 3 -> 7 -> 14 -> 21 -> 30 -> 45 -> 60+ days
+      const progressiveIntervals = [1, 3, 7, 14, 21, 30, 45, 60];
+      const getProgressiveInterval = (reviewCount: number): number => {
+        if (reviewCount >= progressiveIntervals.length) {
+          const extra = reviewCount - progressiveIntervals.length + 1;
+          return Math.min(180, Math.round(60 * Math.pow(1.5, extra)));
+        }
+        return progressiveIntervals[reviewCount];
+      };
+
       let completed: Task | null = null;
-      set((state) => ({
-        tasks: state.tasks.map((t) => {
-          if (t.id === id) {
-            completed = {
-              ...t,
-              masteryLevel: newMasteryLevel as MasteryLevel,
-              lastReviewedAt: now,
-              completedAt: now,
-              nextReviewDate: addDays(new Date(), intervalDays).toISOString(),
-              intervalDays,
-            };
-            return completed;
-          }
-          return t;
-        }),
-        stats: {
-          ...state.stats,
-          totalTasksCompleted: state.stats.totalTasksCompleted + 1,
-        },
-      }));
+      set((state) => {
+        const currentTask = state.tasks.find((t) => t.id === id);
+        if (!currentTask) return state;
+
+        // Spaced repetition: success = level stayed same or increased
+        const wasSuccessful = newMasteryLevel >= currentTask.masteryLevel;
+        const newReviewCount = wasSuccessful ? (currentTask.reviewCount || 0) + 1 : 0;
+
+        // Get base interval from level config
+        const baseInterval = DEFAULT_SETTINGS.urgencyLevels.find(
+          (l) => l.level === newMasteryLevel
+        )?.daysInterval ?? 1;
+
+        // Use progressive interval for successful reviews
+        let intervalDays: number;
+        if (wasSuccessful && newReviewCount > 0) {
+          intervalDays = Math.max(getProgressiveInterval(newReviewCount - 1), baseInterval);
+        } else {
+          intervalDays = baseInterval;
+        }
+
+        return {
+          tasks: state.tasks.map((t) => {
+            if (t.id === id) {
+              completed = {
+                ...t,
+                masteryLevel: newMasteryLevel as MasteryLevel,
+                lastReviewedAt: now,
+                completedAt: now,
+                nextReviewDate: addDays(new Date(), intervalDays).toISOString(),
+                intervalDays,
+                reviewCount: newReviewCount,
+              };
+              return completed;
+            }
+            return t;
+          }),
+          stats: {
+            ...state.stats,
+            totalTasksCompleted: state.stats.totalTasksCompleted + 1,
+          },
+        };
+      });
       if (completed) toast.success('Task completed!');
       return completed;
     }

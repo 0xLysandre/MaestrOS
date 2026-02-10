@@ -94,6 +94,12 @@ export const translations = {
       overdue: 'En retard',
       completed: 'Terminé',
       archived: 'Archivé',
+      howDidItGo: "Comment ça s'est passé ?",
+      gotIt: "J'ai compris !",
+      needsWork: 'À revoir',
+      reviewTomorrow: 'Réviser demain',
+      progressToLevel: 'Passer au niveau',
+      keepLevel: 'Garder le niveau actuel',
     },
     // Mastery levels
     mastery: {
@@ -238,6 +244,12 @@ export const translations = {
       overdue: 'Overdue',
       completed: 'Completed',
       archived: 'Archived',
+      howDidItGo: 'How did it go?',
+      gotIt: 'Got it!',
+      needsWork: 'Needs work',
+      reviewTomorrow: 'Review tomorrow',
+      progressToLevel: 'Progress to level',
+      keepLevel: 'Keep current level',
     },
     // Mastery levels
     mastery: {

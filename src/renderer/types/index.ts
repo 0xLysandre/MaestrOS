@@ -7,6 +7,7 @@ export interface Task {
   customDeadline?: string;
   nextReviewDate: string;
   intervalDays: number;
+  reviewCount: number; // Number of consecutive successful reviews (for spaced repetition)
   createdAt: string;
   lastReviewedAt?: string;
   completedAt?: string;

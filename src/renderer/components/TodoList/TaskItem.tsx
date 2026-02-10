@@ -9,10 +9,14 @@ import {
   ChevronUp,
   ExternalLink,
   Tag,
+  ThumbsUp,
+  ThumbsDown,
+  TrendingUp,
 } from 'lucide-react';
 import { format, isPast, isToday } from 'date-fns';
 import { clsx } from 'clsx';
 import { UrgencyBadge } from './UrgencyBadge';
+import { useTranslation } from '../../hooks/useTranslation';
 import type { Task, MasteryLevel } from '../../types';
 
 interface TaskItemProps {
@@ -22,21 +26,19 @@ interface TaskItemProps {
   onDelete: () => void;
 }
 
-const LEVEL_NAMES: Record<MasteryLevel, string> = {
-  1: 'Critical',
-  2: 'Urgent',
-  3: 'Deadline',
-  4: 'Good',
-  5: 'Mastered',
-};
-
 export function TaskItem({ task, onEdit, onComplete, onDelete }: TaskItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCompleteMenu, setShowCompleteMenu] = useState(false);
+  const { t } = useTranslation();
 
   const reviewDate = new Date(task.nextReviewDate);
   const isOverdue = isPast(reviewDate) && !isToday(reviewDate);
   const isDueToday = isToday(reviewDate);
+
+  // Calculate next level for success (max 5)
+  const successLevel = Math.min(5, task.masteryLevel + 1) as MasteryLevel;
+  // For "needs work", go back to level 1
+  const needsWorkLevel = 1 as MasteryLevel;
 
   return (
     <div
@@ -56,32 +58,80 @@ export function TaskItem({ task, onEdit, onComplete, onDelete }: TaskItemProps) 
             <CheckCircle size={20} />
           </button>
 
-          {/* Complete menu */}
+          {/* Complete menu - Simplified for spaced repetition */}
           {showCompleteMenu && (
             <>
               <div
                 className="fixed inset-0 z-10"
                 onClick={() => setShowCompleteMenu(false)}
               />
-              <div className="absolute left-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-20">
+              <div className="absolute left-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-20">
                 <div className="px-3 py-1 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 mb-1">
-                  Mark as completed with level:
+                  {t.tasks.howDidItGo}
                 </div>
-                {([1, 2, 3, 4, 5] as MasteryLevel[]).map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => {
-                      onComplete(level);
-                      setShowCompleteMenu(false);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                  >
-                    <UrgencyBadge level={level} size="sm" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {LEVEL_NAMES[level]}
-                    </span>
-                  </button>
-                ))}
+
+                {/* Success option */}
+                <button
+                  onClick={() => {
+                    onComplete(successLevel);
+                    setShowCompleteMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-green-50 dark:hover:bg-green-900/20 text-left group"
+                >
+                  <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform">
+                    <ThumbsUp size={16} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      {t.tasks.gotIt}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {t.tasks.progressToLevel} {successLevel}
+                    </div>
+                  </div>
+                </button>
+
+                {/* Needs work option */}
+                <button
+                  onClick={() => {
+                    onComplete(needsWorkLevel);
+                    setShowCompleteMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-left group"
+                >
+                  <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform">
+                    <ThumbsDown size={16} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      {t.tasks.needsWork}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {t.tasks.reviewTomorrow}
+                    </div>
+                  </div>
+                </button>
+
+                {/* Divider */}
+                <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+
+                {/* Keep current option */}
+                <button
+                  onClick={() => {
+                    onComplete(task.masteryLevel);
+                    setShowCompleteMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                >
+                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                    <TrendingUp size={16} />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      {t.tasks.keepLevel}
+                    </div>
+                  </div>
+                </button>
               </div>
             </>
           )}
