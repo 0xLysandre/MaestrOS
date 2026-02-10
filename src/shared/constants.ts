@@ -167,6 +167,17 @@ export const IPC_CHANNELS = {
 
   // Theme
   THEME_CHANGED: 'theme:changed',
+
+  // Updates
+  UPDATE_CHECK: 'update:check',
+  UPDATE_DOWNLOAD: 'update:download',
+  UPDATE_INSTALL: 'update:install',
+  UPDATE_GET_STATE: 'update:get-state',
+  UPDATE_STATUS: 'update:status',
+
+  // Notifications
+  NOTIFICATION_PLAY_SOUND: 'notification:play-sound',
+  NAVIGATE_TO_TASKS: 'navigate:tasks',
 } as const;
 
 // Default settings

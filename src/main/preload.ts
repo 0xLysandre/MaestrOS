@@ -153,6 +153,40 @@ const electronAPI = {
         ipcRenderer.removeListener(IPC_CHANNELS.THEME_CHANGED, listener);
     },
   },
+
+  // Updates
+  updates: {
+    check: (): Promise<IPCResponse<void>> =>
+      invoke(IPC_CHANNELS.UPDATE_CHECK),
+    download: (): Promise<IPCResponse<void>> =>
+      invoke(IPC_CHANNELS.UPDATE_DOWNLOAD),
+    install: (): Promise<IPCResponse<void>> =>
+      invoke(IPC_CHANNELS.UPDATE_INSTALL),
+    getState: (): Promise<IPCResponse<{ available: boolean; downloaded: boolean; info: { version: string; releaseNotes?: string } | null }>> =>
+      invoke(IPC_CHANNELS.UPDATE_GET_STATE),
+    onStatus: (callback: (status: { status: string; info?: unknown }) => void) => {
+      const listener = (_: unknown, status: { status: string; info?: unknown }) => callback(status);
+      ipcRenderer.on(IPC_CHANNELS.UPDATE_STATUS, listener);
+      return () =>
+        ipcRenderer.removeListener(IPC_CHANNELS.UPDATE_STATUS, listener);
+    },
+  },
+
+  // Notifications
+  notifications: {
+    onPlaySound: (callback: () => void) => {
+      const listener = () => callback();
+      ipcRenderer.on(IPC_CHANNELS.NOTIFICATION_PLAY_SOUND, listener);
+      return () =>
+        ipcRenderer.removeListener(IPC_CHANNELS.NOTIFICATION_PLAY_SOUND, listener);
+    },
+    onNavigateToTasks: (callback: (taskId: string) => void) => {
+      const listener = (_: unknown, taskId: string) => callback(taskId);
+      ipcRenderer.on(IPC_CHANNELS.NAVIGATE_TO_TASKS, listener);
+      return () =>
+        ipcRenderer.removeListener(IPC_CHANNELS.NAVIGATE_TO_TASKS, listener);
+    },
+  },
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

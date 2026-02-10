@@ -46,6 +46,40 @@ export default function App() {
     }
   }, [theme]);
 
+  // Listen for notification events (Electron only)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.electronAPI) {
+      // Play notification sound
+      const unsubscribeSound = window.electronAPI.notifications.onPlaySound(() => {
+        // Play a notification sound using Web Audio API
+        const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = 880; // A5 note
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+      });
+
+      // Navigate to tasks when notification is clicked
+      const unsubscribeNavigate = window.electronAPI.notifications.onNavigateToTasks(() => {
+        setCurrentView('tasks');
+      });
+
+      return () => {
+        unsubscribeSound();
+        unsubscribeNavigate();
+      };
+    }
+  }, []);
+
   const handleCreateTask = (timeSlot?: { start: Date; end: Date }) => {
     setEditingTask(null);
     setSelectedTimeSlot(timeSlot || null);

@@ -18,6 +18,12 @@ import {
 } from './services/google-calendar';
 import { findAvailableSlots, hasConflict } from './services/task-scheduler';
 import { calculateNextReview } from './services/spaced-repetition';
+import {
+  checkForUpdates,
+  downloadUpdate,
+  quitAndInstall,
+  getUpdateState,
+} from './services/auto-updater';
 import { getMainWindow } from './main';
 import type {
   CreateTaskDTO,
@@ -357,6 +363,44 @@ export function setupIpcHandlers(): void {
       return success(achievements);
     } catch (err) {
       return error(err instanceof Error ? err.message : 'Failed to get achievements');
+    }
+  });
+
+  // ========== Update Handlers ==========
+
+  ipcMain.handle(IPC_CHANNELS.UPDATE_CHECK, async () => {
+    try {
+      await checkForUpdates();
+      return success(undefined);
+    } catch (err) {
+      return error(err instanceof Error ? err.message : 'Failed to check for updates');
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.UPDATE_DOWNLOAD, async () => {
+    try {
+      await downloadUpdate();
+      return success(undefined);
+    } catch (err) {
+      return error(err instanceof Error ? err.message : 'Failed to download update');
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.UPDATE_INSTALL, async () => {
+    try {
+      quitAndInstall();
+      return success(undefined);
+    } catch (err) {
+      return error(err instanceof Error ? err.message : 'Failed to install update');
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.UPDATE_GET_STATE, async () => {
+    try {
+      const state = getUpdateState();
+      return success(state);
+    } catch (err) {
+      return error(err instanceof Error ? err.message : 'Failed to get update state');
     }
   });
 }

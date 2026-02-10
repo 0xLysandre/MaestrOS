@@ -53,7 +53,6 @@
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.10",
-    "dotenv": "^16.3.1",
     "@fullcalendar/daygrid": "^6.1.10",
     "@fullcalendar/interaction": "^6.1.10",
     "@fullcalendar/react": "^6.1.10",
@@ -61,7 +60,9 @@
     "better-sqlite3": "^12.4.5",
     "clsx": "^2.1.0",
     "date-fns": "^3.0.6",
+    "dotenv": "^16.3.1",
     "electron-store": "^8.1.0",
+    "electron-updater": "^6.7.3",
     "framer-motion": "^10.17.0",
     "google-auth-library": "^9.4.1",
     "googleapis": "^129.0.0",
@@ -75,7 +76,11 @@
   "build": {
     "appId": "com.medscheduler.app",
     "productName": "Medical Scheduler",
-    "publish": null,
+    "publish": {
+      "provider": "github",
+      "owner": "0xLysandre",
+      "repo": "MedPlanOS"
+    },
     "directories": {
       "output": "release"
     },

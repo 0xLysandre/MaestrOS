@@ -3,6 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import { initializeDatabase } from './database/db';
 import { setupIpcHandlers } from './ipc-handlers';
+import { startNotificationService, stopNotificationService } from './services/notification-service';
+import { initAutoUpdater } from './services/auto-updater';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -71,6 +73,12 @@ app.whenReady().then(async () => {
   // Create main window
   createWindow();
 
+  // Start notification service
+  startNotificationService();
+
+  // Initialize auto-updater
+  initAutoUpdater();
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -82,6 +90,10 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+app.on('will-quit', () => {
+  stopNotificationService();
 });
 
 // Handle theme changes
