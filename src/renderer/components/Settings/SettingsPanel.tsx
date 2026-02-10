@@ -17,11 +17,13 @@ import {
   Eye,
   EyeOff,
   ExternalLink,
+  Languages,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useStore } from '../../store';
 import { UrgencyLevelConfig } from './UrgencyLevelConfig';
-import type { Settings } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
+import type { Settings, Language } from '../../types';
 
 export function SettingsPanel() {
   const {
@@ -38,11 +40,17 @@ export function SettingsPanel() {
     importData,
   } = useStore();
 
+  const { t, language, setLanguage } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [localSettings, setLocalSettings] = useState<Settings>(settings);
   const [hasChanges, setHasChanges] = useState(false);
   const [showClientSecret, setShowClientSecret] = useState(false);
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLanguage(newLang);
+    setLocalSettings((prev) => ({ ...prev, language: newLang }));
+  };
 
   const handleChange = <K extends keyof Settings>(key: K, value: Settings[K]) => {
     setLocalSettings((prev) => ({ ...prev, [key]: value }));
@@ -75,19 +83,19 @@ export function SettingsPanel() {
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Appearance */}
       <SettingsSection
-        title="Appearance"
+        title={t.settings.appearance}
         icon={<Palette size={20} />}
-        description="Customize the look and feel of the application"
+        description={t.settings.appearanceDesc}
       >
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Theme
+            {t.settings.theme}
           </label>
           <div className="flex gap-3">
             {[
-              { value: 'light', label: 'Light', icon: <Sun size={18} /> },
-              { value: 'dark', label: 'Dark', icon: <Moon size={18} /> },
-              { value: 'system', label: 'System', icon: <Monitor size={18} /> },
+              { value: 'light', label: t.settings.light, icon: <Sun size={18} /> },
+              { value: 'dark', label: t.settings.dark, icon: <Moon size={18} /> },
+              { value: 'system', label: t.settings.system, icon: <Monitor size={18} /> },
             ].map(({ value, label, icon }) => (
               <button
                 key={value}
@@ -107,16 +115,44 @@ export function SettingsPanel() {
         </div>
       </SettingsSection>
 
+      {/* Language */}
+      <SettingsSection
+        title={t.settings.language}
+        icon={<Languages size={20} />}
+        description={t.settings.languageDesc}
+      >
+        <div className="flex gap-3">
+          {[
+            { value: 'fr' as Language, label: t.settings.french, flag: '🇫🇷' },
+            { value: 'en' as Language, label: t.settings.english, flag: '🇬🇧' },
+          ].map(({ value, label, flag }) => (
+            <button
+              key={value}
+              onClick={() => handleLanguageChange(value)}
+              className={clsx(
+                'flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all',
+                language === value
+                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
+                  : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 text-gray-700 dark:text-gray-300'
+              )}
+            >
+              <span className="text-lg">{flag}</span>
+              {label}
+            </button>
+          ))}
+        </div>
+      </SettingsSection>
+
       {/* Working Hours */}
       <SettingsSection
-        title="Working Hours"
+        title={t.settings.workingHours}
         icon={<Clock size={20} />}
-        description="Set your preferred study hours for task scheduling"
+        description={t.settings.workingHoursDesc}
       >
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Start Time
+              {t.settings.startTime}
             </label>
             <select
               value={localSettings.workingHoursStart}
@@ -134,7 +170,7 @@ export function SettingsPanel() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              End Time
+              {t.settings.endTime}
             </label>
             <select
               value={localSettings.workingHoursEnd}
@@ -154,7 +190,7 @@ export function SettingsPanel() {
 
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Buffer Time Between Events
+            {t.settings.bufferTime}
           </label>
           <select
             value={localSettings.bufferMinutes}
@@ -163,39 +199,39 @@ export function SettingsPanel() {
             }
             className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
-            <option value={5}>5 minutes</option>
-            <option value={10}>10 minutes</option>
-            <option value={15}>15 minutes</option>
-            <option value={30}>30 minutes</option>
+            <option value={5}>5 {t.settings.minutes}</option>
+            <option value={10}>10 {t.settings.minutes}</option>
+            <option value={15}>15 {t.settings.minutes}</option>
+            <option value={30}>30 {t.settings.minutes}</option>
           </select>
         </div>
       </SettingsSection>
 
       {/* Google API Configuration */}
       <SettingsSection
-        title="Google API Configuration"
+        title={t.settings.googleApi}
         icon={<Key size={20} />}
-        description="Configure your Google API credentials for Calendar sync"
+        description={t.settings.googleApiDesc}
       >
         <div className="space-y-4">
           <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              To use Google Calendar sync, you need to create OAuth credentials in the{' '}
+              {t.settings.googleApiInfo}{' '}
               <a
                 href="https://console.cloud.google.com/apis/credentials"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline inline-flex items-center gap-1"
               >
-                Google Cloud Console <ExternalLink size={12} />
+                {t.settings.googleConsole} <ExternalLink size={12} />
               </a>
-              . Create a "Desktop app" OAuth 2.0 Client ID and paste the credentials below.
+              .
             </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Client ID
+              {t.settings.clientId}
             </label>
             <input
               type="text"
@@ -208,7 +244,7 @@ export function SettingsPanel() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Client Secret
+              {t.settings.clientSecret}
             </label>
             <div className="relative">
               <input
@@ -229,16 +265,16 @@ export function SettingsPanel() {
           </div>
 
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Your credentials are stored locally on your device and never sent to any server.
+            {t.settings.credentialsStored}
           </p>
         </div>
       </SettingsSection>
 
       {/* Google Calendar */}
       <SettingsSection
-        title="Google Calendar"
+        title={t.settings.googleCalendar}
         icon={<Calendar size={20} />}
-        description="Connect your Google Calendar to sync events"
+        description={t.settings.googleCalendarDesc}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -249,10 +285,10 @@ export function SettingsPanel() {
                 </div>
                 <div>
                   <div className="font-medium text-gray-900 dark:text-white">
-                    Connected
+                    {t.settings.connectedStatus}
                   </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Your calendar is synced
+                    {t.settings.calendarSynced}
                   </div>
                 </div>
               </>
@@ -263,10 +299,10 @@ export function SettingsPanel() {
                 </div>
                 <div>
                   <div className="font-medium text-gray-900 dark:text-white">
-                    Not Connected
+                    {t.settings.notConnected}
                   </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Connect to sync your events
+                    {t.settings.connectToSync}
                   </div>
                 </div>
               </>
@@ -282,13 +318,13 @@ export function SettingsPanel() {
                   className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   <RefreshCw size={16} className={clsx(isSyncing && 'animate-spin')} />
-                  {isSyncing ? 'Syncing...' : 'Sync Now'}
+                  {isSyncing ? t.header.syncing : t.settings.syncNow}
                 </button>
                 <button
                   onClick={disconnectGoogle}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                 >
-                  Disconnect
+                  {t.settings.disconnect}
                 </button>
               </>
             ) : (
@@ -296,7 +332,7 @@ export function SettingsPanel() {
                 onClick={connectGoogle}
                 className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
               >
-                Connect Google Calendar
+                {t.settings.connectGoogle}
               </button>
             )}
           </div>
@@ -305,7 +341,7 @@ export function SettingsPanel() {
         {isGoogleConnected && (
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Auto-Sync Interval
+              {t.settings.autoSync}
             </label>
             <select
               value={localSettings.autoSyncInterval}
@@ -314,10 +350,10 @@ export function SettingsPanel() {
               }
               className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
-              <option value={5}>Every 5 minutes</option>
-              <option value={15}>Every 15 minutes</option>
-              <option value={30}>Every 30 minutes</option>
-              <option value={60}>Every hour</option>
+              <option value={5}>{t.settings.every} 5 {t.settings.minutes}</option>
+              <option value={15}>{t.settings.every} 15 {t.settings.minutes}</option>
+              <option value={30}>{t.settings.every} 30 {t.settings.minutes}</option>
+              <option value={60}>{t.settings.everyHour}</option>
             </select>
           </div>
         )}
@@ -325,13 +361,13 @@ export function SettingsPanel() {
 
       {/* Notifications */}
       <SettingsSection
-        title="Notifications"
+        title={t.settings.notifications}
         icon={<Bell size={20} />}
-        description="Configure notification preferences"
+        description={t.settings.notificationsDesc}
       >
         <label className="flex items-center justify-between cursor-pointer">
           <span className="text-gray-700 dark:text-gray-300">
-            Enable notifications
+            {t.settings.enableNotifications}
           </span>
           <div className="relative">
             <input
@@ -366,9 +402,9 @@ export function SettingsPanel() {
 
       {/* Urgency Levels */}
       <SettingsSection
-        title="Urgency Levels"
+        title={t.settings.urgencyLevels}
         icon={<Palette size={20} />}
-        description="Customize the review intervals for each mastery level"
+        description={t.settings.urgencyLevelsDesc}
       >
         <UrgencyLevelConfig
           levels={localSettings.urgencyLevels}
@@ -378,9 +414,9 @@ export function SettingsPanel() {
 
       {/* Data Management */}
       <SettingsSection
-        title="Data Management"
+        title={t.settings.dataManagement}
         icon={<Download size={20} />}
-        description="Export or import your data"
+        description={t.settings.dataManagementDesc}
       >
         <div className="flex gap-3">
           <button
@@ -388,14 +424,14 @@ export function SettingsPanel() {
             className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <Download size={18} />
-            Export Data
+            {t.settings.exportData}
           </button>
           <button
             onClick={handleImportClick}
             className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <Upload size={18} />
-            Import Data
+            {t.settings.importData}
           </button>
           <input
             ref={fileInputRef}
@@ -414,7 +450,7 @@ export function SettingsPanel() {
             onClick={handleSave}
             className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium shadow-lg transition-colors"
           >
-            Save Changes
+            {t.settings.saveChanges}
           </button>
         </div>
       )}

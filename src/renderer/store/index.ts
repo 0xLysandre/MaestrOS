@@ -20,6 +20,7 @@ const DEFAULT_SETTINGS: Settings = {
   workingHoursEnd: 22,
   bufferMinutes: 10,
   theme: 'system',
+  language: 'fr',
   urgencyLevels: [
     { level: 1, name: 'Critical', daysInterval: 1, color: '#ef4444' },
     { level: 2, name: 'Urgent', daysInterval: 3, color: '#f97316' },

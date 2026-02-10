@@ -12,6 +12,7 @@ import {
 import { format, addDays } from 'date-fns';
 import { clsx } from 'clsx';
 import { useStore } from '../../store';
+import { useTranslation } from '../../hooks/useTranslation';
 import { UrgencyBadge } from './UrgencyBadge';
 import { TimeSlotSuggester } from '../Scheduler/TimeSlotSuggester';
 import type { Task, MasteryLevel, CreateTaskDTO, UpdateTaskDTO } from '../../types';
@@ -22,16 +23,17 @@ interface TaskModalProps {
   task: Task | null;
 }
 
-const MASTERY_LEVELS: { level: MasteryLevel; name: string; description: string }[] = [
-  { level: 1, name: 'Critical', description: 'Review tomorrow' },
-  { level: 2, name: 'Urgent', description: 'Review in 3 days' },
-  { level: 3, name: 'Deadline', description: 'Custom deadline' },
-  { level: 4, name: 'Good', description: 'Review in 7 days' },
-  { level: 5, name: 'Mastered', description: 'Review in 21 days' },
-];
-
 export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
   const { createTask, updateTask, scheduleTask, findAvailableSlots } = useStore();
+  const { t } = useTranslation();
+
+  const MASTERY_LEVELS: { level: MasteryLevel; nameKey: 'critical' | 'urgent' | 'deadline' | 'good' | 'mastered' }[] = [
+    { level: 1, nameKey: 'critical' },
+    { level: 2, nameKey: 'urgent' },
+    { level: 3, nameKey: 'deadline' },
+    { level: 4, nameKey: 'good' },
+    { level: 5, nameKey: 'mastered' },
+  ];
 
   const [formData, setFormData] = useState({
     title: '',
@@ -195,7 +197,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {task ? 'Edit Task' : 'Create New Task'}
+              {task ? t.common.edit : t.tasks.create}
             </h2>
             <button
               onClick={onClose}
@@ -210,7 +212,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Title *
+                {t.tasks.title} *
               </label>
               <input
                 type="text"
@@ -228,7 +230,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 <FileText size={14} className="inline mr-1" />
-                Description
+                {t.tasks.description}
               </label>
               <textarea
                 value={formData.description}
@@ -245,10 +247,10 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Zap size={14} className="inline mr-1" />
-                Mastery Level
+                {t.tasks.masteryLevel}
               </label>
               <div className="grid grid-cols-5 gap-2">
-                {MASTERY_LEVELS.map(({ level, name, description }) => (
+                {MASTERY_LEVELS.map(({ level, nameKey }) => (
                   <button
                     key={level}
                     type="button"
@@ -264,7 +266,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
                   >
                     <UrgencyBadge level={level} size="sm" />
                     <div className="text-xs mt-1 text-gray-600 dark:text-gray-400">
-                      {name}
+                      {t.mastery[nameKey]}
                     </div>
                   </button>
                 ))}
@@ -277,7 +279,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   <Clock size={14} className="inline mr-1" />
-                  Estimated Duration
+                  {t.tasks.duration}
                 </label>
                 <select
                   value={formData.estimatedDuration}
@@ -303,7 +305,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   <Calendar size={14} className="inline mr-1" />
-                  Custom Deadline
+                  {t.tasks.deadline}
                 </label>
                 <input
                   type="date"
@@ -324,7 +326,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 <Link size={14} className="inline mr-1" />
-                PDF/Resource Link
+                {t.tasks.pdfLink}
               </label>
               <input
                 type="url"
@@ -340,7 +342,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
             {/* Notes */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Notes
+                {t.tasks.notes}
               </label>
               <textarea
                 value={formData.notes}
@@ -357,7 +359,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 <Tag size={14} className="inline mr-1" />
-                Tags
+                {t.tasks.tags}
               </label>
               <input
                 type="text"
@@ -405,7 +407,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
-              Cancel
+              {t.tasks.cancel}
             </button>
             {!task && (
               <button
@@ -415,7 +417,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
                 className="px-4 py-2 text-sm font-medium bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <CalendarPlus size={16} />
-                {isSubmitting ? 'Scheduling...' : 'Create & Schedule'}
+                {t.tasks.createAndSchedule}
               </button>
             )}
             <button
@@ -423,7 +425,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
               disabled={isSubmitting || !formData.title.trim()}
               className="px-4 py-2 text-sm font-medium bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Saving...' : task ? 'Update Task' : 'Create Task'}
+              {task ? t.tasks.update : t.tasks.create}
             </button>
           </div>
         </div>

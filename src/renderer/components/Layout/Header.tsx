@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useStore } from '../../store';
+import { useTranslation } from '../../hooks/useTranslation';
 import type { ViewType } from '../../types';
 
 interface HeaderProps {
@@ -17,15 +18,16 @@ interface HeaderProps {
   isGoogleConnected: boolean;
 }
 
-const viewTitles: Record<ViewType, string> = {
-  calendar: 'Weekly Calendar',
-  tasks: 'Task List',
-  profile: 'Profile & Stats',
-  settings: 'Settings',
-};
-
 export function Header({ currentView, onCreateTask, isGoogleConnected }: HeaderProps) {
   const { syncCalendar, isSyncing, theme, setTheme, connectGoogle } = useStore();
+  const { t } = useTranslation();
+
+  const viewTitles: Record<ViewType, string> = {
+    calendar: t.header.weeklyCalendar,
+    tasks: t.header.taskList,
+    profile: t.header.profileStats,
+    settings: t.header.settings,
+  };
 
   const handleThemeToggle = () => {
     // Get the current actual appearance (accounting for system preference)
@@ -68,7 +70,7 @@ export function Header({ currentView, onCreateTask, isGoogleConnected }: HeaderP
                 )}
               >
                 <RefreshCw size={18} className={clsx(isSyncing && 'animate-spin')} />
-                <span className="text-sm">{isSyncing ? 'Syncing...' : 'Sync'}</span>
+                <span className="text-sm">{isSyncing ? t.header.syncing : t.header.sync}</span>
               </button>
             ) : (
               <button
@@ -76,7 +78,7 @@ export function Header({ currentView, onCreateTask, isGoogleConnected }: HeaderP
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 <CloudOff size={18} />
-                <span className="text-sm">Connect Calendar</span>
+                <span className="text-sm">{t.header.connectCalendar}</span>
               </button>
             )}
 
@@ -90,7 +92,7 @@ export function Header({ currentView, onCreateTask, isGoogleConnected }: HeaderP
               )}
             >
               {isGoogleConnected ? <Cloud size={14} /> : <CloudOff size={14} />}
-              <span>{isGoogleConnected ? 'Connected' : 'Offline'}</span>
+              <span>{isGoogleConnected ? t.header.connected : t.header.offline}</span>
             </div>
           </>
         )}

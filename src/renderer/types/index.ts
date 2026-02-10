@@ -74,11 +74,14 @@ export interface UrgencyLevelConfig {
   color: string;
 }
 
+export type Language = 'fr' | 'en';
+
 export interface Settings {
   workingHoursStart: number;
   workingHoursEnd: number;
   bufferMinutes: number;
   theme: 'light' | 'dark' | 'system';
+  language: Language;
   urgencyLevels: UrgencyLevelConfig[];
   notificationsEnabled: boolean;
   autoSyncInterval: number;

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useStore } from '../../store';
+import { useTranslation } from '../../hooks/useTranslation';
 import { TaskItem } from './TaskItem';
 import { UrgencyBadge } from './UrgencyBadge';
 import type { Task, TaskSortOption, MasteryLevel } from '../../types';
@@ -20,6 +21,7 @@ interface TodoListProps {
 
 export function TodoList({ onEditTask, onCreateTask }: TodoListProps) {
   const { tasks, completeTask, deleteTask } = useStore();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<TaskSortOption>('urgency');
   const [filterLevels, setFilterLevels] = useState<MasteryLevel[]>([]);

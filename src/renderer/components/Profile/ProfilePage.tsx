@@ -10,12 +10,14 @@ import {
 import { format } from 'date-fns';
 import { clsx } from 'clsx';
 import { useStore } from '../../store';
+import { useTranslation } from '../../hooks/useTranslation';
 import { StreakDisplay } from './StreakDisplay';
 import { AchievementList } from './AchievementList';
 import { StatsCard } from './StatsCard';
 
 export function ProfilePage() {
   const { stats, tasks, achievements } = useStore();
+  const { t } = useTranslation();
 
   // Calculate task statistics
   const totalTasks = tasks.length;
@@ -54,26 +56,26 @@ export function ProfilePage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
-          title="Tasks Completed"
+          title={t.profile.tasksCompleted}
           value={stats.totalTasksCompleted}
           icon={<Target size={24} />}
           color="blue"
         />
         <StatsCard
-          title="Current Streak"
-          value={`${stats.currentStreak} days`}
+          title={t.profile.currentStreak}
+          value={`${stats.currentStreak} ${t.profile.days}`}
           icon={<Flame size={24} />}
           color="orange"
         />
         <StatsCard
-          title="Topics Mastered"
+          title={t.mastery.mastered}
           value={masteredTasks}
-          subtitle={`${masteryPercentage}% of all tasks`}
+          subtitle={`${masteryPercentage}%`}
           icon={<Star size={24} />}
           color="green"
         />
         <StatsCard
-          title="Achievements"
+          title={t.profile.achievements}
           value={`${unlockedAchievements}/${totalAchievements}`}
           icon={<Trophy size={24} />}
           color="purple"
@@ -90,19 +92,19 @@ export function ProfilePage() {
         {totalTasks > 0 ? (
           <div className="space-y-3">
             {[
-              { level: 1, name: 'Critical', color: 'bg-red-500' },
-              { level: 2, name: 'Urgent', color: 'bg-orange-500' },
-              { level: 3, name: 'Deadline', color: 'bg-yellow-500' },
-              { level: 4, name: 'Good', color: 'bg-green-500' },
-              { level: 5, name: 'Mastered', color: 'bg-cyan-500' },
-            ].map(({ level, name, color }) => {
+              { level: 1, nameKey: 'critical' as const, color: 'bg-red-500' },
+              { level: 2, nameKey: 'urgent' as const, color: 'bg-orange-500' },
+              { level: 3, nameKey: 'deadline' as const, color: 'bg-yellow-500' },
+              { level: 4, nameKey: 'good' as const, color: 'bg-green-500' },
+              { level: 5, nameKey: 'mastered' as const, color: 'bg-cyan-500' },
+            ].map(({ level, nameKey, color }) => {
               const count = tasksByLevel[level as keyof typeof tasksByLevel];
               const percentage = Math.round((count / totalTasks) * 100);
 
               return (
                 <div key={level} className="flex items-center gap-3">
                   <div className="w-20 text-sm text-gray-600 dark:text-gray-400">
-                    Level {level}
+                    {t.mastery[nameKey]}
                   </div>
                   <div className="flex-1">
                     <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -130,7 +132,7 @@ export function ProfilePage() {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <Trophy size={20} />
-          Achievements
+          {t.profile.achievements}
         </h3>
         <AchievementList achievements={achievements} />
       </div>

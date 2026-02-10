@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useStore } from '../../store';
+import { useTranslation } from '../../hooks/useTranslation';
 import type { ViewType } from '../../types';
 
 interface SidebarProps {
@@ -19,19 +20,20 @@ interface SidebarProps {
 
 interface NavItem {
   id: ViewType;
-  label: string;
+  labelKey: 'calendar' | 'tasks' | 'profile' | 'settings';
   icon: React.ElementType;
 }
 
 const navItems: NavItem[] = [
-  { id: 'calendar', label: 'Calendar', icon: Calendar },
-  { id: 'tasks', label: 'Tasks', icon: ListTodo },
-  { id: 'profile', label: 'Profile', icon: User },
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'calendar', labelKey: 'calendar', icon: Calendar },
+  { id: 'tasks', labelKey: 'tasks', icon: ListTodo },
+  { id: 'profile', labelKey: 'profile', icon: User },
+  { id: 'settings', labelKey: 'settings', icon: Settings },
 ];
 
 export function Sidebar({ currentView, onViewChange, onCreateTask }: SidebarProps) {
   const { stats } = useStore();
+  const { t } = useTranslation();
 
   return (
     <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
@@ -50,7 +52,7 @@ export function Sidebar({ currentView, onViewChange, onCreateTask }: SidebarProp
           className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors"
         >
           <Plus size={20} />
-          <span>New Task</span>
+          <span>{t.nav.newTask}</span>
         </button>
       </div>
 
@@ -73,7 +75,7 @@ export function Sidebar({ currentView, onViewChange, onCreateTask }: SidebarProp
                   )}
                 >
                   <Icon size={20} />
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-medium">{t.nav[item.labelKey]}</span>
                 </button>
               </li>
             );
@@ -90,12 +92,12 @@ export function Sidebar({ currentView, onViewChange, onCreateTask }: SidebarProp
             </div>
             <div>
               <div className="text-2xl font-bold">{stats.currentStreak}</div>
-              <div className="text-sm opacity-90">Day Streak</div>
+              <div className="text-sm opacity-90">{t.profile.currentStreak}</div>
             </div>
           </div>
           {stats.longestStreak > 0 && (
             <div className="mt-2 text-xs opacity-75">
-              Best: {stats.longestStreak} days
+              {t.profile.longestStreak}: {stats.longestStreak} {t.profile.days}
             </div>
           )}
         </div>
@@ -105,7 +107,7 @@ export function Sidebar({ currentView, onViewChange, onCreateTask }: SidebarProp
       <div className="px-4 pb-4">
         <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Tasks Completed
+            {t.profile.tasksCompleted}
           </div>
           <div className="text-xl font-bold text-gray-800 dark:text-white">
             {stats.totalTasksCompleted}
