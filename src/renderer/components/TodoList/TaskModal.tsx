@@ -21,9 +21,10 @@ interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   task: Task | null;
+  selectedTimeSlot?: { start: Date; end: Date } | null;
 }
 
-export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
+export function TaskModal({ isOpen, onClose, task, selectedTimeSlot }: TaskModalProps) {
   const { createTask, updateTask, scheduleTask, findAvailableSlots } = useStore();
   const { t } = useTranslation();
 
@@ -65,22 +66,37 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
           notes: task.notes || '',
           tags: task.tags?.join(', ') || '',
         });
+        setShowScheduler(false);
+        setPendingSchedule(null);
       } else {
+        // Calculate duration from selected time slot if provided
+        let duration = 30;
+        if (selectedTimeSlot) {
+          const diffMs = selectedTimeSlot.end.getTime() - selectedTimeSlot.start.getTime();
+          duration = Math.round(diffMs / (1000 * 60)); // Convert to minutes
+        }
+
         setFormData({
           title: '',
           description: '',
           masteryLevel: 3,
-          estimatedDuration: 30,
+          estimatedDuration: duration,
           customDeadline: '',
           pdfLink: '',
           notes: '',
           tags: '',
         });
+        setShowScheduler(false);
+
+        // If a time slot was selected, pre-set the pending schedule
+        if (selectedTimeSlot) {
+          setPendingSchedule({ start: selectedTimeSlot.start, end: selectedTimeSlot.end });
+        } else {
+          setPendingSchedule(null);
+        }
       }
-      setShowScheduler(false);
-      setPendingSchedule(null);
     }
-  }, [isOpen, task]);
+  }, [isOpen, task, selectedTimeSlot]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

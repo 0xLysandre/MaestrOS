@@ -14,6 +14,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('calendar');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ start: Date; end: Date } | null>(null);
 
   const {
     theme,
@@ -45,8 +46,9 @@ export default function App() {
     }
   }, [theme]);
 
-  const handleCreateTask = () => {
+  const handleCreateTask = (timeSlot?: { start: Date; end: Date }) => {
     setEditingTask(null);
+    setSelectedTimeSlot(timeSlot || null);
     setIsTaskModalOpen(true);
   };
 
@@ -58,6 +60,7 @@ export default function App() {
   const handleCloseModal = () => {
     setIsTaskModalOpen(false);
     setEditingTask(null);
+    setSelectedTimeSlot(null);
   };
 
   const renderView = () => {
@@ -123,6 +126,7 @@ export default function App() {
         isOpen={isTaskModalOpen}
         onClose={handleCloseModal}
         task={editingTask}
+        selectedTimeSlot={selectedTimeSlot}
       />
 
       {/* Toast Notifications */}

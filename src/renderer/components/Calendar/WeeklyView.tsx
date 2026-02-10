@@ -10,7 +10,7 @@ import type { Task, CalendarEvent, ScheduledTask } from '../../types';
 
 interface WeeklyViewProps {
   onTaskClick: (task: Task) => void;
-  onCreateTask: () => void;
+  onCreateTask: (selectedSlot?: { start: Date; end: Date }) => void;
 }
 
 interface CalendarEventData {
@@ -153,9 +153,8 @@ export function WeeklyView({ onTaskClick, onCreateTask }: WeeklyViewProps) {
     allDay: boolean;
   }) => {
     if (!info.allDay) {
-      // Could open a quick-schedule modal here
-      // For now, just open the create task modal
-      onCreateTask();
+      // Pass the selected time slot to task creation
+      onCreateTask({ start: info.start, end: info.end });
     }
   };
 
