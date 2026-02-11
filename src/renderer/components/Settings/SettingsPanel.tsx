@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Sun,
   Moon,
@@ -18,6 +18,9 @@ import {
   EyeOff,
   ExternalLink,
   Languages,
+  ArrowDownCircle,
+  CheckCircle,
+  Loader2,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useStore } from '../../store';
@@ -46,6 +49,63 @@ export function SettingsPanel() {
   const [localSettings, setLocalSettings] = useState<Settings>(settings);
   const [hasChanges, setHasChanges] = useState(false);
   const [showClientSecret, setShowClientSecret] = useState(false);
+
+  // Update state
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'downloading' | 'available' | 'downloaded' | 'up-to-date'>('idle');
+  const [updateInfo, setUpdateInfo] = useState<{ version: string; releaseNotes?: string } | null>(null);
+
+  // Check for Electron API
+  const hasElectronAPI = typeof window !== 'undefined' && window.electronAPI;
+
+  // Get current version from package.json (exposed via Electron)
+  const currentVersion = '1.0.0'; // This could be fetched from electronAPI if exposed
+
+  // Listen for update status changes
+  useEffect(() => {
+    if (!hasElectronAPI) return;
+
+    const unsubscribe = window.electronAPI.updates.onStatus((status) => {
+      if (status.status === 'checking') {
+        setUpdateStatus('checking');
+      } else if (status.status === 'available') {
+        setUpdateStatus('available');
+        setUpdateInfo(status.info as { version: string; releaseNotes?: string });
+      } else if (status.status === 'not-available') {
+        setUpdateStatus('up-to-date');
+      } else if (status.status === 'downloading') {
+        setUpdateStatus('downloading');
+      } else if (status.status === 'downloaded') {
+        setUpdateStatus('downloaded');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [hasElectronAPI]);
+
+  const handleCheckForUpdates = async () => {
+    if (!hasElectronAPI) return;
+    setUpdateStatus('checking');
+    try {
+      await window.electronAPI.updates.check();
+    } catch (error) {
+      setUpdateStatus('idle');
+    }
+  };
+
+  const handleDownloadUpdate = async () => {
+    if (!hasElectronAPI) return;
+    setUpdateStatus('downloading');
+    try {
+      await window.electronAPI.updates.download();
+    } catch (error) {
+      setUpdateStatus('available');
+    }
+  };
+
+  const handleInstallUpdate = async () => {
+    if (!hasElectronAPI) return;
+    await window.electronAPI.updates.install();
+  };
 
   const handleLanguageChange = (newLang: Language) => {
     setLanguage(newLang);
@@ -411,6 +471,110 @@ export function SettingsPanel() {
           onChange={(levels) => handleChange('urgencyLevels', levels)}
         />
       </SettingsSection>
+
+      {/* Updates - Only show in Electron */}
+      {hasElectronAPI && (
+        <SettingsSection
+          title={t.settings.updates}
+          icon={<ArrowDownCircle size={20} />}
+          description={t.settings.updatesDesc}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {updateStatus === 'up-to-date' && (
+                <>
+                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                    <CheckCircle size={20} className="text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {t.settings.upToDate}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {t.settings.currentVersion}: {currentVersion}
+                    </div>
+                  </div>
+                </>
+              )}
+              {(updateStatus === 'available' || updateStatus === 'downloaded') && updateInfo && (
+                <>
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                    <ArrowDownCircle size={20} className="text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {t.settings.updateAvailable}: v{updateInfo.version}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {t.settings.currentVersion}: {currentVersion}
+                    </div>
+                  </div>
+                </>
+              )}
+              {(updateStatus === 'idle' || updateStatus === 'checking' || updateStatus === 'downloading') && (
+                <>
+                  <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                    {updateStatus === 'checking' || updateStatus === 'downloading' ? (
+                      <Loader2 size={20} className="text-gray-500 dark:text-gray-400 animate-spin" />
+                    ) : (
+                      <ArrowDownCircle size={20} className="text-gray-500 dark:text-gray-400" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {updateStatus === 'checking' && t.settings.checking}
+                      {updateStatus === 'downloading' && t.settings.downloading}
+                      {updateStatus === 'idle' && t.settings.currentVersion}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {t.settings.version}: {currentVersion}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              {updateStatus === 'idle' && (
+                <button
+                  onClick={handleCheckForUpdates}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
+                >
+                  <RefreshCw size={16} />
+                  {t.settings.checkForUpdates}
+                </button>
+              )}
+              {updateStatus === 'up-to-date' && (
+                <button
+                  onClick={handleCheckForUpdates}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <RefreshCw size={16} />
+                  {t.settings.checkForUpdates}
+                </button>
+              )}
+              {updateStatus === 'available' && (
+                <button
+                  onClick={handleDownloadUpdate}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                >
+                  <Download size={16} />
+                  {t.settings.downloadUpdate}
+                </button>
+              )}
+              {updateStatus === 'downloaded' && (
+                <button
+                  onClick={handleInstallUpdate}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                >
+                  <CheckCircle size={16} />
+                  {t.settings.installUpdate}
+                </button>
+              )}
+            </div>
+          </div>
+        </SettingsSection>
+      )}
 
       {/* Data Management */}
       <SettingsSection

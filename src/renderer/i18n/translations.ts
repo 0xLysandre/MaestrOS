@@ -69,6 +69,18 @@ export const translations = {
       exportData: 'Exporter les données',
       importData: 'Importer les données',
       saveChanges: 'Enregistrer les modifications',
+      // Updates
+      updates: 'Mises à jour',
+      updatesDesc: "Vérifiez et installez les mises à jour de l'application",
+      checkForUpdates: 'Rechercher les mises à jour',
+      checking: 'Recherche en cours...',
+      downloading: 'Téléchargement...',
+      upToDate: 'Vous utilisez la dernière version',
+      updateAvailable: 'Mise à jour disponible',
+      downloadUpdate: 'Télécharger la mise à jour',
+      installUpdate: 'Installer et redémarrer',
+      version: 'Version',
+      currentVersion: 'Version actuelle',
     },
     // Tasks
     tasks: {
@@ -219,6 +231,18 @@ export const translations = {
       exportData: 'Export Data',
       importData: 'Import Data',
       saveChanges: 'Save Changes',
+      // Updates
+      updates: 'Updates',
+      updatesDesc: 'Check and install application updates',
+      checkForUpdates: 'Check for Updates',
+      checking: 'Checking...',
+      downloading: 'Downloading...',
+      upToDate: 'You are using the latest version',
+      updateAvailable: 'Update available',
+      downloadUpdate: 'Download Update',
+      installUpdate: 'Install and Restart',
+      version: 'Version',
+      currentVersion: 'Current version',
     },
     // Tasks
     tasks: {
