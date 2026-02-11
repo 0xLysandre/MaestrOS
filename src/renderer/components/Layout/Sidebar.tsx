@@ -6,6 +6,8 @@ import {
   Settings,
   Plus,
   Flame,
+  AlertCircle,
+  ChevronRight,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useStore } from '../../store';
@@ -32,11 +34,20 @@ const navItems: NavItem[] = [
 ];
 
 export function Sidebar({ currentView, onViewChange, onCreateTask }: SidebarProps) {
-  const { stats } = useStore();
+  const { stats, tasks } = useStore();
   const { t } = useTranslation();
 
   // Check if running on macOS (Electron exposes this via navigator.platform)
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac');
+
+  // Get tasks due today or overdue
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  const tasksDueToday = tasks.filter((task) => {
+    if (task.isArchived) return false;
+    const dueDate = new Date(task.nextReviewDate);
+    return dueDate <= today;
+  }).slice(0, 3); // Show max 3 tasks
 
   return (
     <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
@@ -65,6 +76,37 @@ export function Sidebar({ currentView, onViewChange, onCreateTask }: SidebarProp
           <span>{t.nav.newTask}</span>
         </button>
       </div>
+
+      {/* Due Today Section */}
+      {tasksDueToday.length > 0 && (
+        <div className="px-4 pb-4">
+          <button
+            onClick={() => onViewChange('tasks')}
+            className="w-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-left hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                <AlertCircle size={16} />
+                <span className="text-sm font-medium">{t.tasks.dueToday}</span>
+              </div>
+              <div className="flex items-center gap-1 text-amber-600 dark:text-amber-500">
+                <span className="text-xs font-bold">{tasksDueToday.length}</span>
+                <ChevronRight size={14} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              {tasksDueToday.map((task) => (
+                <div
+                  key={task.id}
+                  className="text-xs text-amber-800 dark:text-amber-300 truncate"
+                >
+                  • {task.title}
+                </div>
+              ))}
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-2">
