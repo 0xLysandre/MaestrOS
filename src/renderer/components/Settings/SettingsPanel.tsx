@@ -76,6 +76,9 @@ export function SettingsPanel() {
         setUpdateStatus('downloading');
       } else if (status.status === 'downloaded') {
         setUpdateStatus('downloaded');
+      } else if (status.status === 'error') {
+        // On error, go back to idle so user can try again
+        setUpdateStatus('up-to-date');
       }
     });
 
@@ -84,7 +87,6 @@ export function SettingsPanel() {
 
   const handleCheckForUpdates = async () => {
     if (!hasElectronAPI) return;
-    setUpdateStatus('checking');
     try {
       await window.electronAPI.updates.check();
     } catch (error) {

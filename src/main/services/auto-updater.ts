@@ -126,13 +126,17 @@ export function initAutoUpdater(): void {
 export async function checkForUpdates(): Promise<void> {
   if (!app.isPackaged) {
     console.log('Update check skipped in development');
+    // In dev mode, send "not-available" so the UI doesn't get stuck
+    sendUpdateStatus('not-available');
     return;
   }
 
   try {
+    sendUpdateStatus('checking');
     await autoUpdater.checkForUpdates();
   } catch (error) {
     console.error('Failed to check for updates:', error);
+    sendUpdateStatus('error', { message: (error as Error).message });
   }
 }
 
