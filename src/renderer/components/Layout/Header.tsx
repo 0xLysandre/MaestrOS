@@ -22,6 +22,9 @@ export function Header({ currentView, onCreateTask, isGoogleConnected }: HeaderP
   const { syncCalendar, isSyncing, theme, setTheme, connectGoogle } = useStore();
   const { t } = useTranslation();
 
+  // Check if running on macOS
+  const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac');
+
   const viewTitles: Record<ViewType, string> = {
     calendar: t.header.weeklyCalendar,
     tasks: t.header.taskList,
@@ -48,14 +51,20 @@ export function Header({ currentView, onCreateTask, isGoogleConnected }: HeaderP
   };
 
   return (
-    <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 flex items-center justify-between">
+    <header
+      className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 flex items-center justify-between"
+      style={isMac ? { WebkitAppRegion: 'drag' } as React.CSSProperties : undefined}
+    >
       {/* Title */}
       <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
         {viewTitles[currentView]}
       </h2>
 
-      {/* Actions */}
-      <div className="flex items-center gap-3">
+      {/* Actions - no-drag so buttons work */}
+      <div
+        className="flex items-center gap-3"
+        style={isMac ? { WebkitAppRegion: 'no-drag' } as React.CSSProperties : undefined}
+      >
         {/* Google Calendar Status */}
         {currentView === 'calendar' && (
           <>

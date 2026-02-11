@@ -12,6 +12,8 @@ let mainWindow: BrowserWindow | null = null;
 const isDev = !app.isPackaged;
 
 function createWindow(): void {
+  const isMac = process.platform === 'darwin';
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -23,7 +25,8 @@ function createWindow(): void {
       nodeIntegration: false,
       sandbox: false,
     },
-    titleBarStyle: 'hiddenInset',
+    titleBarStyle: isMac ? 'hiddenInset' : 'default',
+    trafficLightPosition: isMac ? { x: 16, y: 16 } : undefined,
     show: false,
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#1a1a2e' : '#ffffff',
   });

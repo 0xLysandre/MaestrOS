@@ -35,10 +35,21 @@ export function Sidebar({ currentView, onViewChange, onCreateTask }: SidebarProp
   const { stats } = useStore();
   const { t } = useTranslation();
 
+  // Check if running on macOS (Electron exposes this via navigator.platform)
+  const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac');
+
   return (
     <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+      {/* Drag region for macOS traffic lights */}
+      {isMac && (
+        <div
+          className="h-12 flex-shrink-0"
+          style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+        />
+      )}
+
       {/* Logo */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className={`px-6 pb-4 ${isMac ? 'pt-2' : 'pt-6'} border-b border-gray-200 dark:border-gray-700`}>
         <h1 className="text-xl font-bold text-gray-800 dark:text-white">
           MaestrOS
         </h1>
