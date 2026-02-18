@@ -176,23 +176,32 @@ export function TaskModal({ isOpen, onClose, task, selectedTimeSlot }: TaskModal
     const newTask = await createTask(taskData);
 
     if (newTask) {
-      // Find the best available slot
-      const startDate = new Date();
-      const endDate = addDays(startDate, 7);
-      const slots = await findAvailableSlots(
-        formData.estimatedDuration,
-        startDate.toISOString(),
-        endDate.toISOString()
-      );
-
-      if (slots.length > 0) {
-        // Schedule to the best (first) slot
-        const bestSlot = slots[0];
+      if (pendingSchedule) {
+        // User dragged a specific slot — schedule directly to it
         await scheduleTask(
           newTask.id,
-          bestSlot.start instanceof Date ? bestSlot.start.toISOString() : bestSlot.start,
-          bestSlot.end instanceof Date ? bestSlot.end.toISOString() : bestSlot.end
+          pendingSchedule.start.toISOString(),
+          pendingSchedule.end.toISOString()
         );
+      } else {
+        // No slot pre-selected — find best available slot from today
+        const startDate = new Date();
+        const endDate = addDays(startDate, 7);
+        const slots = await findAvailableSlots(
+          formData.estimatedDuration,
+          startDate.toISOString(),
+          endDate.toISOString()
+        );
+
+        if (slots.length > 0) {
+          // Schedule to the best (first) slot
+          const bestSlot = slots[0];
+          await scheduleTask(
+            newTask.id,
+            bestSlot.start instanceof Date ? bestSlot.start.toISOString() : bestSlot.start,
+            bestSlot.end instanceof Date ? bestSlot.end.toISOString() : bestSlot.end
+          );
+        }
       }
     }
 
