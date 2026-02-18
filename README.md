@@ -5,18 +5,22 @@ A smart study planner for French students featuring review scheduling, Google Ca
 ## Screenshots
 
 ![Dashboard](.github/images/dashboard.png)
-![Calendar](.github/images/calendar.png)
+
+
+![Vue Hebdo](./.github/images/tache_ajoutee.png)
 
 ---
 
 ## Download & Install
 
 ### Windows
+
 1. Download `MaestrOS.Setup.exe` from the [latest release](../../releases/latest)
 2. Run the installer
 3. Launch "MaestrOS" from your Start Menu
 
 ### macOS
+
 1. Download `MaestrOS.dmg` from the [latest release](../../releases/latest)
 2. Open the DMG and drag the app to Applications
 3. **Important**: Run this command in Terminal to allow the app:
@@ -26,6 +30,7 @@ A smart study planner for French students featuring review scheduling, Google Ca
 4. Launch from Applications
 
 ### Linux
+
 1. Download `MaestrOS.AppImage` from the [latest release](../../releases/latest)
 2. Make it executable: `chmod +x MaestrOS.AppImage`
 3. Run it: `./MaestrOS.AppImage`
@@ -37,21 +42,25 @@ A smart study planner for French students featuring review scheduling, Google Ca
 ## Features
 
 ### Smart Task Management
+
 - **5-Level Mastery System**: Track learning progress from level 1 (new topic) to level 5 (mastered)
 - **Review Scheduling**: Tasks auto-reschedule using progressive intervals that grow with your mastery
 - **One-Click Scheduling**: "Create & Schedule" button finds the best time slot automatically
 
 ### Calendar Integration
+
 - **Google Calendar Sync**: See all your events in one place (optional)
 - **Weekly View**: Interactive calendar with drag-and-drop
 - **Conflict Detection**: Smart scheduling avoids double-booking
 
 ### Gamification
+
 - **Daily Streaks**: Build consistency with streak tracking
 - **Achievements**: Unlock badges for reaching milestones
 - **Progress Stats**: Track completed tasks and mastery progress
 
 ### Additional Features
+
 - **Dark/Light Mode**: Choose your preferred theme
 - **French & English**: Full bilingual support
 - **Export/Import**: Backup your data as JSON
@@ -65,6 +74,7 @@ A smart study planner for French students featuring review scheduling, Google Ca
 ## Quick Start Guide
 
 ### Creating Tasks
+
 1. Click **"Nouvelle tâche"** in the sidebar
 2. Fill in title, description, and mastery level
 3. Click **"Créer & Planifier"** to auto-schedule, or just **"Créer"**
@@ -72,16 +82,17 @@ A smart study planner for French students featuring review scheduling, Google Ca
 ### Mastery Levels
 
 | Level | Default Name | Review Interval |
-|-------|--------------|-----------------|
-| 1 | Critique | 1 day |
-| 2 | Urgent | 3 days |
-| 3 | Échéance | 7 days |
-| 4 | Bon | 7 days |
-| 5 | Maîtrisé | 21 days |
+| ----- | ------------ | --------------- |
+| 1     | Critique     | 1 day           |
+| 2     | Urgent       | 3 days          |
+| 3     | Échéance   | 7 days          |
+| 4     | Bon          | 7 days          |
+| 5     | Maîtrisé   | 21 days         |
 
 *Intervals grow progressively with consecutive successful reviews (1 → 3 → 7 → 14 → 21 → 30 → 45 → 60+ days)*
 
 ### Completing Tasks
+
 - Click a task to mark complete
 - Choose how it went: "J'ai compris !", "À revoir", or "Garder le niveau"
 - Next review date calculates automatically based on your response
@@ -93,16 +104,19 @@ A smart study planner for French students featuring review scheduling, Google Ca
 To sync with Google Calendar, you need to create your own OAuth credentials:
 
 ### Step 1: Create a Google Cloud Project
+
 1. Go to [Google Cloud Console](https://console.cloud.google.com)
 2. Click **Select a project** → **New Project**
 3. Name it (e.g., "MaestrOS") and click **Create**
 
 ### Step 2: Enable the Calendar API
+
 1. Go to **APIs & Services** → **Library**
 2. Search for "Google Calendar API"
 3. Click **Enable**
 
 ### Step 3: Create OAuth Credentials
+
 1. Go to **APIs & Services** → **Credentials**
 2. Click **Create Credentials** → **OAuth client ID**
 3. If prompted, configure the consent screen first:
@@ -113,6 +127,7 @@ To sync with Google Calendar, you need to create your own OAuth credentials:
 5. Click **Create** and copy the **Client ID** and **Client Secret**
 
 ### Step 4: Add Credentials to MaestrOS
+
 1. Open MaestrOS and go to **Settings**
 2. Scroll to **Google API Configuration**
 3. Paste your Client ID and Client Secret
@@ -124,6 +139,7 @@ To sync with Google Calendar, you need to create your own OAuth credentials:
 ## For Developers
 
 ### Prerequisites
+
 - Node.js 18+
 - npm
 
@@ -142,6 +158,7 @@ npm run dev
 ```
 
 #### NixOS Users
+
 ```bash
 ./dev.sh
 ```
@@ -187,15 +204,15 @@ MaestrOS/
 
 ### Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Framework | Electron 38 |
-| Frontend | React 18 + TypeScript |
-| Styling | Tailwind CSS |
-| State | Zustand |
-| Database | SQLite (better-sqlite3) |
-| Calendar | FullCalendar |
-| Updates | electron-updater |
+| Layer     | Technology              |
+| --------- | ----------------------- |
+| Framework | Electron 38             |
+| Frontend  | React 18 + TypeScript   |
+| Styling   | Tailwind CSS            |
+| State     | Zustand                 |
+| Database  | SQLite (better-sqlite3) |
+| Calendar  | FullCalendar            |
+| Updates   | electron-updater        |
 
 ---
 
