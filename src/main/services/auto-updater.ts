@@ -121,7 +121,7 @@ export function initAutoUpdater(): void {
 }
 
 /**
- * Check for updates
+ * Check for updates with timeout
  */
 export async function checkForUpdates(): Promise<void> {
   if (!app.isPackaged) {
@@ -131,12 +131,43 @@ export async function checkForUpdates(): Promise<void> {
     return;
   }
 
+  // Track if we received a response
+  let responded = false;
+
+  // Set up one-time listeners to track response
+  const onResponse = () => {
+    responded = true;
+  };
+
+  autoUpdater.once('update-available', onResponse);
+  autoUpdater.once('update-not-available', onResponse);
+  autoUpdater.once('error', onResponse);
+
   try {
     sendUpdateStatus('checking');
-    await autoUpdater.checkForUpdates();
+
+    // Start the check
+    const checkPromise = autoUpdater.checkForUpdates();
+
+    // Create a timeout promise (30 seconds)
+    const timeoutPromise = new Promise<void>((_, reject) => {
+      setTimeout(() => {
+        if (!responded) {
+          reject(new Error('Update check timed out'));
+        }
+      }, 30000);
+    });
+
+    // Race between check and timeout
+    await Promise.race([checkPromise, timeoutPromise]);
   } catch (error) {
     console.error('Failed to check for updates:', error);
     sendUpdateStatus('error', { message: (error as Error).message });
+  } finally {
+    // Clean up listeners
+    autoUpdater.removeListener('update-available', onResponse);
+    autoUpdater.removeListener('update-not-available', onResponse);
+    autoUpdater.removeListener('error', onResponse);
   }
 }
 
