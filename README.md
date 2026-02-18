@@ -1,5 +1,10 @@
 # MaestrOS
 
+[![GitHub release](https://img.shields.io/github/v/release/0xLysandre/MaestrOS?style=flat-square)](https://github.com/0xLysandre/MaestrOS/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=flat-square)]()
+[![Electron](https://img.shields.io/badge/Electron-38-47848F?style=flat-square&logo=electron&logoColor=white)]()
+
 A smart study planner for French students featuring review scheduling, Google Calendar integration, and gamification. Perfect for CPGE, BTS, Licence, Médecine, Droit, and any study program.
 
 ## Screenshots
