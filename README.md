@@ -5,6 +5,13 @@
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=flat-square)]()
 [![Electron](https://img.shields.io/badge/Electron-38-47848F?style=flat-square&logo=electron&logoColor=white)]()
 
+[![study-planner](https://img.shields.io/badge/study--planner-8A2BE2?style=flat-square)](https://github.com/topics/study-planner)
+[![spaced-repetition](https://img.shields.io/badge/spaced--repetition-8A2BE2?style=flat-square)](https://github.com/topics/spaced-repetition)
+[![productivity](https://img.shields.io/badge/productivity-8A2BE2?style=flat-square)](https://github.com/topics/productivity)
+[![google-calendar](https://img.shields.io/badge/google--calendar-8A2BE2?style=flat-square)](https://github.com/topics/google-calendar)
+[![react](https://img.shields.io/badge/react-8A2BE2?style=flat-square)](https://github.com/topics/react)
+[![typescript](https://img.shields.io/badge/typescript-8A2BE2?style=flat-square)](https://github.com/topics/typescript)
+
 A smart study planner for French students featuring review scheduling, Google Calendar integration, and gamification. Perfect for CPGE, BTS, Licence, Médecine, Droit, and any study program.
 
 ## Screenshots
