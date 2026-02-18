@@ -2,6 +2,13 @@
 
 A smart study planner for French students featuring review scheduling, Google Calendar integration, and gamification. Perfect for CPGE, BTS, Licence, Médecine, Droit, and any study program.
 
+## Screenshots
+
+![Dashboard](.github/images/dashboard.png)
+![Calendar](.github/images/calendar.png)
+
+---
+
 ## Download & Install
 
 ### Windows
